@@ -1,5 +1,4 @@
-import React from 'react';
-import { Search } from 'lucide-react';
+import logo from '../../assets/images/logo.png';
 
 export default function Navbar() {
   return (
@@ -7,6 +6,7 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         {/* Left */}
         <div className="flex items-center gap-3">
+          <img src={logo} alt="Profilio Logo" className="w-8 h-8 object-contain" />
           <span className="font-heading font-extrabold text-2xl gradient-text">
             Profilio
           </span>

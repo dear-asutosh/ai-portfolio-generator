@@ -1,4 +1,5 @@
 import React from 'react';
+import logo from '../../assets/images/logo.png';
 
 export default function Footer() {
   return (
@@ -8,9 +9,12 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-20">
           {/* Col 1 */}
           <div className="flex flex-col">
-            <span className="font-heading font-extrabold text-2xl tracking-tighter gradient-text mb-4">
-              Profilio
-            </span>
+            <div className="flex items-center gap-3 mb-4">
+              <img src={logo} alt="Profilio Logo" className="w-8 h-8 object-contain" />
+              <span className="font-heading font-extrabold text-2xl tracking-tighter gradient-text">
+                Profilio
+              </span>
+            </div>
             <span className="font-mono text-xs text-muted leading-relaxed">
               Build Your Own Identity.<br />
               Built with Groq AI and ambition.
