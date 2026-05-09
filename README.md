@@ -45,5 +45,7 @@ We will be opening up access as soon as we are confident the product meets our s
 
 <div align="center">
   <p>Crafted with care.</p>
-  <p>&copy; 2026 [Asutosh](https://www.asutoshsahoo.co.in). All Rights Reserved.</p>
+  <p align="center">
+  &copy; 2026 <a href="https://www.asutoshsahoo.co.in">Asutosh Sahoo</a>. All Rights Reserved.
+</p>
 </div>
