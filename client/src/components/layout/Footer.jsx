@@ -9,10 +9,10 @@ export default function Footer() {
           {/* Col 1 */}
           <div className="flex flex-col">
             <span className="font-heading font-extrabold text-2xl tracking-tighter gradient-text mb-4">
-              PortfolioAI
+              Profilio
             </span>
             <span className="font-mono text-xs text-muted leading-relaxed">
-              Resume in. Portfolio out.<br />
+              Build Your Own Identity.<br />
               Built with Groq AI and ambition.
             </span>
           </div>
@@ -54,7 +54,7 @@ export default function Footer() {
         {/* Bottom Bar */}
         <div className="border-t border-[rgba(255,255,255,0.08)] py-8 flex flex-col md:flex-row justify-between items-center gap-4">
           <span className="font-mono text-[11px] text-muted">
-            © 2025 PortfolioAI. All rights reserved.
+            © 2025 Profilio. All rights reserved.
           </span>
           <span className="font-mono text-[11px] text-[#6366f1]">
             Made for students who deserve to be seen.

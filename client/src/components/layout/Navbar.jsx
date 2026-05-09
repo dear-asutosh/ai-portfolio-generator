@@ -8,7 +8,7 @@ export default function Navbar() {
         {/* Left */}
         <div className="flex items-center gap-3">
           <span className="font-heading font-extrabold text-2xl gradient-text">
-            Portfolio AI
+            Profilio
           </span>
           <span className="font-mono text-[12px] border border-[rgba(255,255,255,0.08)] px-2 py-0.5 rounded-full">
             v1.0 ✦

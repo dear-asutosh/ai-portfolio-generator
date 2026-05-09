@@ -44,7 +44,7 @@ export default function Hero() {
             variants={itemVariants}
             className="text-5xl md:text-6xl font-semibold tracking-tight mb-8"
           >
-            Turn Your <span className="gradient-text">Resume</span> Into a <span className="gradient-text">Portfolio</span> That Gets You <span className="gradient-text">Hired.</span>
+            Build Your Own <span className="gradient-text">Identity</span> With <span className="gradient-text">Profilio</span>
           </motion.h1>
 
           {/* Subheadline */}
@@ -52,7 +52,7 @@ export default function Hero() {
             variants={itemVariants}
             className="text-lg text-slate-400 max-w-xl mb-12 leading-relaxed"
           >
-            Upload your resume, paste your LinkedIn profile, or fill a guided form. PortfolioAI uses <span className="text-white font-medium">Groq AI</span> to generate a polished portfolio website and publishes it to your own shareable URL in minutes.
+            Upload your resume, paste your LinkedIn profile, or fill a guided form. Profilio uses <span className="text-white font-medium">Groq AI</span> to generate a polished portfolio website and publishes it to your own shareable URL in minutes.
           </motion.p>
 
           {/* CTAs */}
