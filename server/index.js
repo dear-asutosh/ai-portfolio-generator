@@ -1,18 +1,20 @@
+require('dotenv').config();
 const dns = require('dns');
-dns.setDefaultResultOrder('ipv4first');
-try {
-    dns.setServers(['8.8.8.8', '8.8.4.4']);
-} catch (e) {
-    console.log('Could not set DNS servers, continuing with defaults');
+
+// Fix for MongoDB Atlas connection issues on some Windows machines
+if (process.env.NODE_ENV !== 'production') {
+    dns.setDefaultResultOrder('ipv4first');
+    try {
+        dns.setServers(['8.8.8.8', '8.8.4.4']);
+    } catch (e) {
+        console.log('Note: Could not set custom DNS servers, using system defaults.');
+    }
 }
+
 const express = require('express');
-const dotenv = require('dotenv');
 const cors = require('cors');
 const helmet = require('helmet');
 const compression = require('compression');
-// Load env vars
-dotenv.config();
-
 const connectDB = require('./config/db');
 const passport = require('passport');
 require('./config/passport'); // Load passport strategies
@@ -62,6 +64,14 @@ app.get('/', (req, res) => {
 
 // Mount routers
 app.use('/api/auth', auth);
+
+// Health Check Route
+app.get('/api/health', (req, res) => {
+    res.json({
+        success: true,
+        message: "Backend is live !"
+    });
+});
 
 // Global Error Handler
 app.use((err, req, res, next) => {
