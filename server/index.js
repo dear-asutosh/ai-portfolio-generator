@@ -10,15 +10,18 @@ const dotenv = require('dotenv');
 const cors = require('cors');
 const helmet = require('helmet');
 const compression = require('compression');
-const connectDB = require('./config/db');
-
 // Load env vars
 dotenv.config();
+
+const connectDB = require('./config/db');
+const passport = require('passport');
+require('./config/passport'); // Load passport strategies
 
 // Connect to database
 connectDB();
 
 const app = express();
+app.use(passport.initialize());
 
 // Security Headers
 app.use(helmet());
@@ -49,10 +52,16 @@ app.use(cors({
     credentials: true
 }));
 
+// Route files
+const auth = require('./routes/authRoutes');
+
 // Basic Route
 app.get('/', (req, res) => {
     res.json({ message: 'API is running...' });
 });
+
+// Mount routers
+app.use('/api/auth', auth);
 
 // Global Error Handler
 app.use((err, req, res, next) => {
