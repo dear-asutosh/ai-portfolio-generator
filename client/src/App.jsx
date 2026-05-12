@@ -8,6 +8,8 @@ import LandingPage from './pages/LandingPage'
 import Dashboard from './pages/dashboard/Dashboard'
 import Editor from './pages/editor/Editor'
 import LoginPage from './pages/auth/LoginPage'
+import SignupPage from './pages/auth/SignupPage'
+import { Toaster } from 'react-hot-toast'
 
 // A simple wrapper for protected routes
 const ProtectedRoute = ({ children }) => {
@@ -39,6 +41,19 @@ const AppContent = () => {
         />
         
         <Route path={routes.auth.login} element={<LoginPage />} />
+        <Route path={routes.auth.signup} element={<SignupPage />} />
+
+        {/* Global Toaster */}
+        <Toaster 
+          position="top-right"
+          toastOptions={{
+            style: {
+              background: '#111',
+              color: '#fff',
+              border: '1px solid rgba(255,255,255,0.05)',
+            },
+          }}
+        />
 
         {/* Dashboard Route (Protected) */}
         <Route 
