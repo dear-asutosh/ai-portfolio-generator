@@ -7,10 +7,10 @@ import Footer from './components/layout/Footer'
 import LandingPage from './pages/LandingPage'
 import Dashboard from './pages/dashboard/Dashboard'
 import Editor from './pages/editor/Editor'
+import ProjectSetup from './pages/editor/ProjectSetup'
 import LoginPage from './pages/auth/LoginPage'
 import SignupPage from './pages/auth/SignupPage'
 import AuthSuccess from './pages/auth/AuthSuccess'
-
 import SettingsPage from './pages/settings/SettingsPage'
 import NotFoundPage from './pages/error/NotFoundPage'
 
@@ -73,6 +73,18 @@ const AppContent = () => {
             <ProtectedRoute>
               <Navbar />
               <SettingsPage />
+              <Footer />
+            </ProtectedRoute>
+          } 
+        />
+
+        {/* Project Setup Route (Protected) */}
+        <Route 
+          path={routes.project.new} 
+          element={
+            <ProtectedRoute>
+              <Navbar />
+              <ProjectSetup />
               <Footer />
             </ProtectedRoute>
           } 

@@ -48,6 +48,8 @@ exports.createProject = async (req, res, next) => {
     try {
         // Add user to req.body
         req.body.user = req.user.id;
+        
+        console.log('Creating project with data:', req.body);
 
         const project = await Project.create(req.body);
 
@@ -56,6 +58,7 @@ exports.createProject = async (req, res, next) => {
             data: project
         });
     } catch (err) {
+        console.error('Project Creation Error:', err.message);
         res.status(400).json({ success: false, message: err.message });
     }
 };

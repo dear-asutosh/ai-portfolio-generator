@@ -9,7 +9,7 @@ const ProjectSchema = new mongoose.Schema({
     },
     slug: {
         type: String,
-        unique: true
+        index: true
     },
     description: {
         type: String,
@@ -32,28 +32,20 @@ const ProjectSchema = new mongoose.Schema({
     thumbnail: {
         type: String,
         default: ''
-    },
-    createdAt: {
-        type: Date,
-        default: Date.now
-    },
-    updatedAt: {
-        type: Date,
-        default: Date.now
     }
+}, {
+    timestamps: true
 });
 
 // Create project slug from title before saving
-ProjectSchema.pre('save', function(next) {
+ProjectSchema.pre('save', async function() {
     if (!this.isModified('title')) {
-        next();
         return;
     }
     this.slug = this.title
         .toLowerCase()
         .replace(/[^\w ]+/g, '')
-        .replace(/ +/g, '-');
-    next();
+        .replace(/ +/g, '-') + '-' + Math.random().toString(36).substring(2, 7);
 });
 
 module.exports = mongoose.model('Project', ProjectSchema);
