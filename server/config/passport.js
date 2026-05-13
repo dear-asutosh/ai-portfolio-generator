@@ -73,6 +73,7 @@ passport.use(
                 socialId: profile.id,
                 name: profile.displayName,
                 email: profile.emails[0].value,
+                avatar: profile.photos[0]?.value,
                 provider: 'google'
             };
 
@@ -85,9 +86,12 @@ passport.use(
                 });
 
                 if (user) {
-                    // Update socialId if user existed but was local or other provider
+                    // Update socialId and avatar if user existed
                     user.socialId = profile.id;
                     user.provider = 'google';
+                    if (!user.avatar || user.avatar.includes('flaticon.com')) {
+                        user.avatar = profile.photos[0]?.value;
+                    }
                     await user.save();
                     done(null, user);
                 } else {
@@ -115,6 +119,7 @@ passport.use(
                 socialId: profile.id,
                 name: profile.displayName || profile.username,
                 email: profile.emails ? profile.emails[0].value : `${profile.username}@github.com`,
+                avatar: profile.photos[0]?.value,
                 provider: 'github'
             };
 
@@ -129,6 +134,9 @@ passport.use(
                 if (user) {
                     user.socialId = profile.id;
                     user.provider = 'github';
+                    if (!user.avatar || user.avatar.includes('flaticon.com')) {
+                        user.avatar = profile.photos[0]?.value;
+                    }
                     await user.save();
                     done(null, user);
                 } else {

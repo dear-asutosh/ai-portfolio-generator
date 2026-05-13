@@ -6,6 +6,7 @@ const routes = {
     success: "/auth/success",
   },
   dashboard: "/dashboard",
+  settings: "/settings",
   project: {
     index: "/project/:id",
     new: "/project/new",
