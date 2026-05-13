@@ -9,6 +9,7 @@ import Dashboard from './pages/dashboard/Dashboard'
 import Editor from './pages/editor/Editor'
 import LoginPage from './pages/auth/LoginPage'
 import SignupPage from './pages/auth/SignupPage'
+import AuthSuccess from './pages/auth/AuthSuccess'
 
 // A simple wrapper for protected routes
 const ProtectedRoute = ({ children }) => {
@@ -41,6 +42,7 @@ const AppContent = () => {
         
         <Route path={routes.auth.login} element={<LoginPage />} />
         <Route path={routes.auth.signup} element={<SignupPage />} />
+        <Route path={routes.auth.success} element={<AuthSuccess />} />
 
         {/* Dashboard Route (Protected) */}
         <Route 

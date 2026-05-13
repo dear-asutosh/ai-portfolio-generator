@@ -65,8 +65,26 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('user');
   };
 
+  const verifyUser = async () => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      try {
+        const res = await API.get('/auth/me');
+        if (res.data.success) {
+          setUser(res.data.data);
+          localStorage.setItem('user', JSON.stringify(res.data.data));
+          return { success: true };
+        }
+      } catch (err) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+      }
+    }
+    return { success: false };
+  };
+
   return (
-    <AuthContext.Provider value={{ user, login, signup, logout, loading }}>
+    <AuthContext.Provider value={{ user, login, signup, logout, verifyUser, loading }}>
       {children}
     </AuthContext.Provider>
   );
