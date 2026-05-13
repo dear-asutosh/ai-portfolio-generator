@@ -37,7 +37,9 @@ const LoginPage = () => {
     try {
       const result = await login(email, password);
       if (result.success) {
-        navigate(from, { replace: true, state: { message: 'Successfully logged in ! WELCOME BACK 😊' } });
+        const dashboardUrl = routes.dashboard.replace(':username', `@${result.user.username}`);
+        const redirectTo = from === routes.dashboard ? dashboardUrl : from;
+        navigate(redirectTo, { replace: true, state: { message: 'Successfully logged in ! WELCOME BACK 😊' } });
       } else {
         setError(result.error || 'Login failed');
       }

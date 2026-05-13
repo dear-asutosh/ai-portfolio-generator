@@ -56,6 +56,7 @@ app.use(cors({
 
 // Route files
 const auth = require('./routes/authRoutes');
+const projects = require('./routes/projects');
 
 // Basic Route
 app.get('/', (req, res) => {
@@ -64,6 +65,7 @@ app.get('/', (req, res) => {
 
 // Mount routers
 app.use('/api/auth', auth);
+app.use('/api/projects', projects);
 
 // Health Check Route
 app.get('/api/health', (req, res) => {

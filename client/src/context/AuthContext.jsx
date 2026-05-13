@@ -37,9 +37,10 @@ export const AuthProvider = ({ children }) => {
       
       // Get user details
       const userRes = await API.get('/auth/me');
-      setUser(userRes.data.data);
-      localStorage.setItem('user', JSON.stringify(userRes.data.data));
-      return { success: true };
+      const userData = userRes.data.data;
+      setUser(userData);
+      localStorage.setItem('user', JSON.stringify(userData));
+      return { success: true, user: userData };
     }
     return { success: false, error: res.data.error };
   };
@@ -52,9 +53,10 @@ export const AuthProvider = ({ children }) => {
       
       // Get user details
       const userRes = await API.get('/auth/me');
-      setUser(userRes.data.data);
-      localStorage.setItem('user', JSON.stringify(userRes.data.data));
-      return { success: true };
+      const userData = userRes.data.data;
+      setUser(userData);
+      localStorage.setItem('user', JSON.stringify(userData));
+      return { success: true, user: userData };
     }
     return { success: false, error: res.data.error };
   };
@@ -71,9 +73,10 @@ export const AuthProvider = ({ children }) => {
       try {
         const res = await API.get('/auth/me');
         if (res.data.success) {
-          setUser(res.data.data);
-          localStorage.setItem('user', JSON.stringify(res.data.data));
-          return { success: true };
+          const userData = res.data.data;
+          setUser(userData);
+          localStorage.setItem('user', JSON.stringify(userData));
+          return { success: true, user: userData };
         }
       } catch (err) {
         localStorage.removeItem('token');

@@ -5,7 +5,7 @@ const routes = {
     signup: "/auth/signup",
     success: "/auth/success",
   },
-  dashboard: "/dashboard",
+  dashboard: "/:username/dashboard",
   settings: "/settings",
   project: {
     index: "/project/:id",
@@ -14,6 +14,7 @@ const routes = {
   templates: "/templates",
   pricing: "/pricing",
   docs: "/docs",
+  notFound: "*",
 };
 
 export default routes;

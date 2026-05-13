@@ -14,8 +14,13 @@ const AuthSuccess = () => {
         if (token) {
             localStorage.setItem('token', token);
             // Verify user and redirect
-            verifyUser().then(() => {
-                navigate(routes.dashboard, { replace: true, state: { message: 'Successfully logged in with social account!' } });
+            verifyUser().then((res) => {
+                if (res.success) {
+                    const dashboardUrl = routes.dashboard.replace(':username', `@${res.user.username}`);
+                    navigate(dashboardUrl, { replace: true, state: { message: 'Successfully logged in with social account!' } });
+                } else {
+                    navigate(routes.auth.login, { replace: true });
+                }
             });
         } else {
             navigate(routes.auth.login, { replace: true });

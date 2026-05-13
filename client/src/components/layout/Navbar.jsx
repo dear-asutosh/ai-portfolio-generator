@@ -110,7 +110,7 @@ export default function Navbar() {
 
                     <div className="p-1">
                       <Link 
-                        to={routes.dashboard} 
+                        to={routes.dashboard.replace(':username', `@${user?.username || 'user'}`)} 
                         onClick={() => setIsDropdownOpen(false)}
                         className="flex items-center gap-3 px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
                       >

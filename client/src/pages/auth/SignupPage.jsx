@@ -88,7 +88,8 @@ const SignupPage = () => {
     try {
       const result = await signup(formData.name, formData.email, formData.password);
       if (result.success) {
-        navigate(routes.dashboard, { state: { message: 'Account created successfully! Welcome aboard.' } });
+        const dashboardUrl = routes.dashboard.replace(':username', `@${result.user.username}`);
+        navigate(dashboardUrl, { state: { message: 'Account created successfully! Welcome aboard.' } });
       } else {
         setError(result.error || 'Signup failed');
       }
