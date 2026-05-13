@@ -2,13 +2,15 @@ import React, { useState } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import routes from '../../routes';
-import { Sparkles, ArrowRight, Mail, Lock, Loader2 } from 'lucide-react';
-import toast from 'react-hot-toast';
+import { Sparkles, ArrowRight, Mail, Lock, Loader2, Eye, EyeOff } from 'lucide-react';
+import Notification from '../../components/common/Notification';
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState(null);
   
   const { login } = useAuth();
   const navigate = useNavigate();
@@ -19,18 +21,28 @@ const LoginPage = () => {
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    setError(null);
+
+    // Humanized Client-Side Validation
+    if (!email || !password) {
+      return setError("We need both your email and password to get you in.");
+    }
+
+    if (password.length < 6) {
+      return setError("That password seems a bit too short for our security standards.");
+    }
+
     setIsLoading(true);
     
     try {
       const result = await login(email, password);
       if (result.success) {
-        toast.success('Successfully logged in!');
-        navigate(from, { replace: true });
+        navigate(from, { replace: true, state: { message: 'Successfully logged in ! WELCOME BACK 😊' } });
       } else {
-        toast.error(result.error || 'Login failed');
+        setError(result.error || 'Login failed');
       }
     } catch (err) {
-      toast.error(err.response?.data?.error || 'Something went wrong');
+      setError(err.response?.data?.error || 'Something went wrong !');
     } finally {
       setIsLoading(false);
     }
@@ -52,6 +64,15 @@ const LoginPage = () => {
             <p className="text-gray-400 text-sm">Sign in to continue building your AI portfolio.</p>
           </div>
 
+          {error && (
+            <Notification 
+              type="error" 
+              message={error} 
+              onClose={() => setError(null)} 
+              className="mb-6 relative z-10"
+            />
+          )}
+
           <form onSubmit={handleLogin} className="space-y-4 relative z-10">
             <div>
               <label className="block text-[10px] font-mono uppercase tracking-widest text-gray-500 mb-2 ml-1">Email Address</label>
@@ -61,7 +82,10 @@ const LoginPage = () => {
                   type="email" 
                   required
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    if (error) setError(null);
+                  }}
                   placeholder="asutosh@example.com"
                   className="w-full bg-[#161616] border border-white/10 rounded-lg pl-10 pr-4 py-3 text-white focus:outline-none focus:border-cyan-500/50 transition-all placeholder:text-gray-700"
                 />
@@ -73,13 +97,23 @@ const LoginPage = () => {
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-600" size={18} />
                 <input 
-                  type="password" 
+                  type={showPassword ? "text" : "password"} 
                   required
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    if (error) setError(null);
+                  }}
                   placeholder="••••••••"
-                  className="w-full bg-[#161616] border border-white/10 rounded-lg pl-10 pr-4 py-3 text-white focus:outline-none focus:border-cyan-500/50 transition-all placeholder:text-gray-700"
+                  className="w-full bg-[#161616] border border-white/10 rounded-lg pl-10 pr-10 py-3 text-white focus:outline-none focus:border-cyan-500/50 transition-all placeholder:text-gray-700"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 hover:text-gray-400 transition-colors"
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
               </div>
             </div>
             

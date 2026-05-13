@@ -1,9 +1,26 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import routes from '../../routes';
 import { LayoutGrid, Plus, ExternalLink, Clock } from 'lucide-react';
+import Notification from '../../components/common/Notification';
 
 const Dashboard = () => {
+  const location = useLocation();
+  const [notification, setNotification] = useState(null);
+
+  // Check for success messages from navigation state (e.g. from signup/login)
+  useEffect(() => {
+    if (location.state?.message) {
+      setNotification({
+        type: location.state.type || 'success',
+        message: location.state.message
+      });
+      
+      // Clear the state to prevent notification from reappearing on refresh
+      window.history.replaceState({}, document.title);
+    }
+  }, [location]);
+
   // Mock data for projects
   const projects = [
     { id: '1', title: 'Creative Developer Portfolio', lastModified: '2 hours ago', status: 'Live' },
@@ -13,6 +30,15 @@ const Dashboard = () => {
 
   return (
     <div className="pt-24 pb-12 px-6 max-w-7xl mx-auto min-h-screen bg-[#0a0a0a] text-white">
+      {notification && (
+        <Notification 
+          type={notification.type} 
+          message={notification.message} 
+          onClose={() => setNotification(null)} 
+          className="mb-8"
+        />
+      )}
+
       <div className="flex justify-between items-center mb-10">
         <div>
           <h1 className="text-3xl font-heading font-bold gradient-text mb-2">My Projects</h1>

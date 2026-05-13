@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import routes from '../../routes';
-import { Sparkles, ArrowRight, Mail, Lock, User, Loader2 } from 'lucide-react';
-import toast from 'react-hot-toast';
+import { Sparkles, ArrowRight, Mail, Lock, User, Loader2, Eye, EyeOff, Check } from 'lucide-react';
+import Notification from '../../components/common/Notification';
 
 const SignupPage = () => {
   const [formData, setFormData] = useState({
@@ -13,19 +13,74 @@ const SignupPage = () => {
     confirmPassword: ''
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [error, setError] = useState(null);
   
   const { signup } = useAuth();
   const navigate = useNavigate();
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+    // Clear error when user starts typing again
+    if (error) setError(null);
+  };
+
+  const [passwordStrength, setPasswordStrength] = useState({
+    score: 0,
+    label: '',
+    color: 'bg-gray-800'
+  });
+
+  const [criteria, setCriteria] = useState({
+    length: false,
+    upper: false,
+    number: false,
+    symbol: false
+  });
+
+  const checkStrength = (pass) => {
+    const checks = {
+      length: pass.length >= 6,
+      upper: /[A-Z]/.test(pass),
+      number: /[0-9]/.test(pass),
+      symbol: /[^A-Za-z0-9]/.test(pass)
+    };
+
+    setCriteria(checks);
+
+    let score = Object.values(checks).filter(Boolean).length;
+    
+    const labels = ['Too Short', 'Weak', 'Good', 'Strong', 'Very Strong'];
+    const colors = ['bg-red-500', 'bg-red-500', 'bg-yellow-500', 'bg-green-500', 'bg-cyan-400'];
+
+    setPasswordStrength({
+      score,
+      label: labels[score],
+      color: colors[score]
+    });
   };
 
   const handleSignup = async (e) => {
     e.preventDefault();
+    setError(null);
     
+    // Humanized Client-Side Validation
+    if (formData.name.trim().length < 2) {
+      return setError("Hey! We'd love to know your full name first.");
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      return setError("That email looks a bit unusual. Mind double-checking it?");
+    }
+
+    if (formData.password.length < 6) {
+      return setError("Security first! Let's make that password at least 6 characters.");
+    }
+
     if (formData.password !== formData.confirmPassword) {
-      return toast.error('Passwords do not match');
+      return setError("Oops! Those passwords don't quite match up.");
     }
 
     setIsLoading(true);
@@ -33,13 +88,12 @@ const SignupPage = () => {
     try {
       const result = await signup(formData.name, formData.email, formData.password);
       if (result.success) {
-        toast.success('Account created successfully!');
-        navigate(routes.dashboard);
+        navigate(routes.dashboard, { state: { message: 'Account created successfully! Welcome aboard.' } });
       } else {
-        toast.error(result.error || 'Signup failed');
+        setError(result.error || 'Signup failed');
       }
     } catch (err) {
-      toast.error(err.response?.data?.error || 'Something went wrong');
+      setError(err.response?.data?.error || 'Something went wrong');
     } finally {
       setIsLoading(false);
     }
@@ -60,6 +114,15 @@ const SignupPage = () => {
             <h1 className="text-2xl font-bold text-white mb-2">Create Account</h1>
             <p className="text-gray-400 text-sm">Join PortfolioAI and start generating today.</p>
           </div>
+
+          {error && (
+            <Notification 
+              type="error" 
+              message={error} 
+              onClose={() => setError(null)} 
+              className="mb-6 relative z-10"
+            />
+          )}
 
           <form onSubmit={handleSignup} className="space-y-4 relative z-10">
             <div>
@@ -100,14 +163,70 @@ const SignupPage = () => {
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-600" size={18} />
                 <input 
                   name="password"
-                  type="password" 
+                  type={showPassword ? "text" : "password"} 
                   required
                   value={formData.password}
-                  onChange={handleChange}
+                  onChange={(e) => {
+                    handleChange(e);
+                    checkStrength(e.target.value);
+                  }}
                   placeholder="••••••••"
-                  className="w-full bg-[#161616] border border-white/10 rounded-lg pl-10 pr-4 py-3 text-white focus:outline-none focus:border-cyan-500/50 transition-all placeholder:text-gray-700"
+                  className="w-full bg-[#161616] border border-white/10 rounded-lg pl-10 pr-10 py-3 text-white focus:outline-none focus:border-cyan-500/50 transition-all placeholder:text-gray-700"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 hover:text-gray-400 transition-colors"
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
               </div>
+              
+              {/* Password Strength Meter */}
+              {formData.password && (
+                <div className="mt-2 px-1">
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="text-[10px] uppercase tracking-wider text-gray-500">Strength:</span>
+                    <span className={`text-[10px] font-bold uppercase ${passwordStrength.color.replace('bg-', 'text-')}`}>
+                      {passwordStrength.label}
+                    </span>
+                  </div>
+                  <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
+                    <div 
+                      className={`h-full transition-all duration-500 ${passwordStrength.color}`}
+                      style={{ width: `${(passwordStrength.score / 4) * 100}%` }}
+                    />
+                  </div>
+
+                  {/* Criteria Checklist */}
+                  <div className="mt-3 grid grid-cols-2 gap-y-1.5 gap-x-4">
+                    <div className="flex items-center gap-2">
+                      <div className={`w-3.5 h-3.5 rounded-full flex items-center justify-center border ${criteria.length ? 'bg-green-500/20 border-green-500/50' : 'border-white/10'}`}>
+                        {criteria.length && <Check size={10} className="text-green-400" />}
+                      </div>
+                      <span className={`text-[10px] ${criteria.length ? 'text-gray-300' : 'text-gray-600'}`}>6+ Characters</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className={`w-3.5 h-3.5 rounded-full flex items-center justify-center border ${criteria.upper ? 'bg-green-500/20 border-green-500/50' : 'border-white/10'}`}>
+                        {criteria.upper && <Check size={10} className="text-green-400" />}
+                      </div>
+                      <span className={`text-[10px] ${criteria.upper ? 'text-gray-300' : 'text-gray-600'}`}>One Uppercase</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className={`w-3.5 h-3.5 rounded-full flex items-center justify-center border ${criteria.number ? 'bg-green-500/20 border-green-500/50' : 'border-white/10'}`}>
+                        {criteria.number && <Check size={10} className="text-green-400" />}
+                      </div>
+                      <span className={`text-[10px] ${criteria.number ? 'text-gray-300' : 'text-gray-600'}`}>One Number</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className={`w-3.5 h-3.5 rounded-full flex items-center justify-center border ${criteria.symbol ? 'bg-green-500/20 border-green-500/50' : 'border-white/10'}`}>
+                        {criteria.symbol && <Check size={10} className="text-green-400" />}
+                      </div>
+                      <span className={`text-[10px] ${criteria.symbol ? 'text-gray-300' : 'text-gray-600'}`}>One Symbol</span>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div>
@@ -116,13 +235,20 @@ const SignupPage = () => {
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-600" size={18} />
                 <input 
                   name="confirmPassword"
-                  type="password" 
+                  type={showConfirmPassword ? "text" : "password"} 
                   required
                   value={formData.confirmPassword}
                   onChange={handleChange}
                   placeholder="••••••••"
-                  className="w-full bg-[#161616] border border-white/10 rounded-lg pl-10 pr-4 py-3 text-white focus:outline-none focus:border-cyan-500/50 transition-all placeholder:text-gray-700"
+                  className="w-full bg-[#161616] border border-white/10 rounded-lg pl-10 pr-10 py-3 text-white focus:outline-none focus:border-cyan-500/50 transition-all placeholder:text-gray-700"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 hover:text-gray-400 transition-colors"
+                >
+                  {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
               </div>
             </div>
             

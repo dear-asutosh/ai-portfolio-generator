@@ -9,7 +9,6 @@ import Dashboard from './pages/dashboard/Dashboard'
 import Editor from './pages/editor/Editor'
 import LoginPage from './pages/auth/LoginPage'
 import SignupPage from './pages/auth/SignupPage'
-import { Toaster } from 'react-hot-toast'
 
 // A simple wrapper for protected routes
 const ProtectedRoute = ({ children }) => {
@@ -27,18 +26,6 @@ const ProtectedRoute = ({ children }) => {
 const AppContent = () => {
   return (
     <div className="min-h-screen bg-[#0a0a0a]">
-      {/* Global Toaster */}
-      <Toaster 
-        position="top-right"
-        toastOptions={{
-          style: {
-            background: '#111',
-            color: '#fff',
-            border: '1px solid rgba(255,255,255,0.05)',
-          },
-        }}
-      />
-
       <Routes>
         {/* Public Routes */}
         <Route 
@@ -83,11 +70,11 @@ const AppContent = () => {
 
 const App = () => {
   return (
-    <AuthProvider>
-      <Router>
-        <AppContent />
-      </Router>
-    </AuthProvider>
+        <AuthProvider>
+          <Router>
+            <AppContent />
+          </Router>
+        </AuthProvider>
   )
 }
 
