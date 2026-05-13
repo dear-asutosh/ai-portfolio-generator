@@ -12,6 +12,7 @@ import SignupPage from './pages/auth/SignupPage'
 import AuthSuccess from './pages/auth/AuthSuccess'
 
 import SettingsPage from './pages/settings/SettingsPage'
+import NotFoundPage from './pages/error/NotFoundPage'
 
 // A simple wrapper for protected routes
 const ProtectedRoute = ({ children }) => {
@@ -86,6 +87,9 @@ const AppContent = () => {
             </ProtectedRoute>
           } 
         />
+
+        {/* 404 Catch-all Route */}
+        <Route path={routes.notFound} element={<NotFoundPage />} />
       </Routes>
     </div>
   );
