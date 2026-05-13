@@ -27,6 +27,18 @@ const ProtectedRoute = ({ children }) => {
 const AppContent = () => {
   return (
     <div className="min-h-screen bg-[#0a0a0a]">
+      {/* Global Toaster */}
+      <Toaster 
+        position="top-right"
+        toastOptions={{
+          style: {
+            background: '#111',
+            color: '#fff',
+            border: '1px solid rgba(255,255,255,0.05)',
+          },
+        }}
+      />
+
       <Routes>
         {/* Public Routes */}
         <Route 
@@ -42,18 +54,6 @@ const AppContent = () => {
         
         <Route path={routes.auth.login} element={<LoginPage />} />
         <Route path={routes.auth.signup} element={<SignupPage />} />
-
-        {/* Global Toaster */}
-        <Toaster 
-          position="top-right"
-          toastOptions={{
-            style: {
-              background: '#111',
-              color: '#fff',
-              border: '1px solid rgba(255,255,255,0.05)',
-            },
-          }}
-        />
 
         {/* Dashboard Route (Protected) */}
         <Route 
