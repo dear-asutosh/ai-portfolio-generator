@@ -8,7 +8,8 @@ import {
   Upload, 
   Sparkles,
   Layout,
-  CheckCircle2
+  CheckCircle2,
+  Info
 } from 'lucide-react';
 import Navbar from '../../components/layout/Navbar';
 import Footer from '../../components/layout/Footer';
@@ -159,12 +160,36 @@ const ProjectSetup = () => {
                   </div>
                 </div>
               ) : (
-                <div className="flex flex-col items-center justify-center py-12 border-2 border-dashed border-white/10 rounded-3xl hover:border-cyan-500/30 transition-colors cursor-pointer group">
-                  <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mb-4 group-hover:bg-cyan-500/10 transition-colors">
-                    <Upload className="text-gray-400 group-hover:text-cyan-400 transition-colors" size={32} />
+                <div className="space-y-8">
+                  {method === 'linkedin' && (
+                    <div className="p-6 bg-blue-500/5 border border-blue-500/20 rounded-2xl animate-in fade-in slide-in-from-top-2 duration-300">
+                      <div className="flex items-center gap-2 mb-4 text-blue-400 font-bold text-xs uppercase tracking-widest">
+                        <Info size={14} /> Guide: How to export your profile
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="flex flex-col gap-1">
+                          <span className="text-xs text-blue-400/60 font-bold">Step 1</span>
+                          <p className="text-sm text-gray-300">Go to your <span className="text-white font-medium">LinkedIn Profile</span> page.</p>
+                        </div>
+                        <div className="flex flex-col gap-1">
+                          <span className="text-xs text-blue-400/60 font-bold">Step 2</span>
+                          <p className="text-sm text-gray-300">Click <span className="text-white font-medium">"More"</span> (near the Resources section).</p>
+                        </div>
+                        <div className="flex flex-col gap-1">
+                          <span className="text-xs text-blue-400/60 font-bold">Step 3</span>
+                          <p className="text-sm text-gray-300">Select <span className="text-white font-medium">"Save to PDF"</span> and upload it below.</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="flex flex-col items-center justify-center py-12 border-2 border-dashed border-white/10 rounded-3xl hover:border-cyan-500/30 transition-colors cursor-pointer group">
+                    <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mb-4 group-hover:bg-cyan-500/10 transition-colors">
+                      <Upload className="text-gray-400 group-hover:text-cyan-400 transition-colors" size={32} />
+                    </div>
+                    <p className="font-bold mb-1">Click to upload your {method === 'resume' ? 'Resume' : 'LinkedIn PDF'}</p>
+                    <p className="text-xs text-gray-500 uppercase tracking-tighter">PDF Format only (Max 5MB)</p>
                   </div>
-                  <p className="font-bold mb-1">Click to upload your {method === 'resume' ? 'Resume' : 'LinkedIn PDF'}</p>
-                  <p className="text-xs text-gray-500 uppercase tracking-tighter">PDF Format only (Max 5MB)</p>
                 </div>
               )}
 
