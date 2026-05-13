@@ -269,7 +269,7 @@ const SignupPage = () => {
 
           <div className="grid grid-cols-2 gap-4 relative z-10">
             <a 
-              href="http://localhost:5000/api/auth/github"
+              href={`${import.meta.env.VITE_API_URL}/auth/github`}
               className="bg-[#1a1a1a] hover:bg-[#222] border border-white/5 py-2.5 rounded-lg flex items-center justify-center gap-2 text-sm transition-colors text-gray-300"
             >
                <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current" xmlns="http://www.w3.org/2000/svg">
@@ -278,7 +278,7 @@ const SignupPage = () => {
               GitHub
             </a>
             <a 
-              href="http://localhost:5000/api/auth/google"
+              href={`${import.meta.env.VITE_API_URL}/auth/google`}
               className="bg-[#1a1a1a] hover:bg-[#222] border border-white/5 py-2.5 rounded-lg flex items-center justify-center gap-2 text-sm transition-colors text-gray-300"
             >
                <svg viewBox="0 0 24 24" className="w-5 h-5" xmlns="http://www.w3.org/2000/svg">
