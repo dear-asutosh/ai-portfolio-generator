@@ -26,13 +26,19 @@ const ProjectSchema = new mongoose.Schema({
         default: 'Draft'
     },
     content: {
-        type: Object, // This will store the generated portfolio structure
+        type: Object, // This stores the structured JSON data (personal info, skills, etc.)
         default: {}
+    },
+    generatedCode: {
+        html: { type: String, default: '' },
+        css: { type: String, default: '' },
+        js: { type: String, default: '' }
     },
     thumbnail: {
         type: String,
         default: ''
     }
+
 }, {
     timestamps: true
 });

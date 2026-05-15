@@ -23,7 +23,15 @@ require('./config/passport'); // Load passport strategies
 connectDB();
 
 const app = express();
+
+// Request logging middleware
+app.use((req, res, next) => {
+    console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
+    next();
+});
+
 app.use(passport.initialize());
+
 
 // Security Headers
 app.use(helmet());
@@ -57,6 +65,7 @@ app.use(cors({
 // Route files
 const auth = require('./routes/authRoutes');
 const projects = require('./routes/projects');
+const ai = require('./routes/aiRoutes');
 
 // Basic Route
 app.get('/', (req, res) => {
@@ -66,6 +75,7 @@ app.get('/', (req, res) => {
 // Mount routers
 app.use('/api/auth', auth);
 app.use('/api/projects', projects);
+app.use('/api/ai', ai);
 
 // Health Check Route
 app.get('/api/health', (req, res) => {
@@ -78,11 +88,14 @@ app.get('/api/health', (req, res) => {
 // Global Error Handler
 app.use((err, req, res, next) => {
     console.error(err.stack);
+    const errorMessage = process.env.NODE_ENV === 'production' ? 'Server Error' : err.message;
     res.status(500).json({
         success: false,
-        error: process.env.NODE_ENV === 'production' ? 'Server Error' : err.message
+        message: errorMessage,
+        error: errorMessage
     });
 });
+
 
 const PORT = process.env.PORT || 5000;
 
