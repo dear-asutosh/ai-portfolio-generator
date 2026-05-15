@@ -1,22 +1,19 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { 
   Play, 
-  Save, 
   Share2, 
   ChevronLeft, 
-  MessageSquare, 
   Code2, 
   Eye, 
   Settings,
   PanelLeftClose,
   PanelRightClose,
-  Terminal,
   Sparkles,
   Edit2,
   Loader2,
   LayoutGrid,
-  GripVertical
+  GripVertical,
 } from 'lucide-react';
 import API from '../../apis/api';
 import Notification from '../../components/common/Notification';
@@ -30,6 +27,8 @@ const Editor = () => {
   const [viewMode, setViewMode] = useState('visual'); // 'visual' or 'developer'
   const [activeTab, setActiveTab] = useState('html');
   const [chatInput, setChatInput] = useState('');
+  const [chatMessages, setChatMessages] = useState([]);
+  const [isGenerating, setIsGenerating] = useState(false);
 
   // Resizing state
   const [sidebarWidth, setSidebarWidth] = useState(380);
@@ -71,12 +70,72 @@ const Editor = () => {
     };
   }, [isResizingSidebar, isResizingEditor, sidebarWidth]);
 
+  const handleInitialGeneration = useCallback(async (projectData) => {
+    setIsGenerating(true);
+    setChatMessages([{
+      role: 'assistant',
+      content: `Hello ${projectData.content?.personalInfo?.name || 'there'}! I'm analyzing your profile and starting to build your portfolio right now. Hang tight...`
+    }]);
+
+    try {
+      const res = await API.post('/ai/initialize-portfolio', {
+        userData: projectData.content,
+        targetRole: projectData.description
+      });
+
+      if (res.data.success) {
+        const { html, css, js } = res.data.data;
+        
+        // Save the generated code to the project
+        await API.put(`/projects/${id}`, {
+          generatedCode: { html, css, js }
+        });
+
+        setProject(prev => ({
+          ...prev,
+          generatedCode: { html, css, js }
+        }));
+
+        setChatMessages(prev => [...prev, {
+          role: 'assistant',
+          content: "I've finished the first version of your portfolio! You can see it in the preview section. How does it look?"
+        }]);
+
+        setNotification({
+          type: 'success',
+          message: 'Portfolio initialized successfully!'
+        });
+      }
+    } catch (err) {
+      console.error('Generation Error:', err);
+      setChatMessages(prev => [...prev, {
+        role: 'assistant',
+        content: "I ran into a bit of trouble generating your portfolio. Could you try refreshing or sending me a message?"
+      }]);
+    } finally {
+      setIsGenerating(false);
+    }
+  }, [id]);
+
   useEffect(() => {
     const fetchProject = async () => {
       try {
         const res = await API.get(`/projects/${id}`);
         if (res.data.success) {
-          setProject(res.data.data);
+          const projectData = res.data.data;
+          setProject(projectData);
+
+          // If project has content but no code yet, trigger initial generation
+          if (projectData.content && Object.keys(projectData.content).length > 0 && 
+              (!projectData.generatedCode || !projectData.generatedCode.html)) {
+            handleInitialGeneration(projectData);
+          } else {
+            // Add initial welcome message
+            setChatMessages([{
+              role: 'assistant',
+              content: `Welcome back, ${projectData.content?.personalInfo?.name || 'there'}! I've loaded your portfolio. What would you like to tweak today?`
+            }]);
+          }
         }
       } catch (err) {
         console.error('Error fetching project:', err);
@@ -90,7 +149,55 @@ const Editor = () => {
     };
 
     fetchProject();
-  }, [id]);
+  }, [id, handleInitialGeneration]);
+
+
+  const getCombinedCode = () => {
+    if (!project?.generatedCode?.html) return '';
+    const { html, css, js } = project.generatedCode;
+    return `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <style>
+            body { margin: 0; padding: 0; font-family: sans-serif; }
+            ${css}
+          </style>
+        </head>
+        <body>
+          ${html}
+          <script>${js}</script>
+        </body>
+      </html>
+    `;
+  };
+
+  const handleSendMessage = async () => {
+    if (!chatInput.trim()) return;
+    
+    const userMsg = { role: 'user', content: chatInput };
+    setChatMessages(prev => [...prev, userMsg]);
+    setChatInput('');
+    setIsGenerating(true);
+
+    try {
+      const res = await API.post('/ai/suggest', {
+        currentData: project.content,
+        prompt: chatInput
+      });
+
+      if (res.data.success) {
+        setChatMessages(prev => [...prev, {
+          role: 'assistant',
+          content: res.data.suggestion
+        }]);
+      }
+    } catch {
+      setNotification({ type: 'error', message: 'AI failed to respond.' });
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
   const handleRename = async () => {
     const newTitle = window.prompt('Enter new project title:', project?.title);
@@ -105,7 +212,7 @@ const Editor = () => {
           message: 'Project renamed successfully.'
         });
       }
-    } catch (err) {
+    } catch {
       setNotification({
         type: 'error',
         message: 'Failed to rename project.'
@@ -210,22 +317,45 @@ const Editor = () => {
           </div>
           
           <div className="flex-1 overflow-y-auto p-4 space-y-4">
-            <div className="bg-[#111] border border-white/5 p-4 rounded-xl text-sm text-gray-300 leading-relaxed">
-              {viewMode === 'visual' 
-                ? "I'm ready to help you build your dream portfolio! Just tell me what you want to change, and I'll handle the technical details." 
-                : "Developer mode active. I'll explain my code changes here as we work."}
-            </div>
+            {chatMessages.map((msg, i) => (
+              <div 
+                key={i} 
+                className={`p-4 rounded-xl text-sm leading-relaxed animate-in fade-in slide-in-from-bottom-2 duration-300 ${
+                  msg.role === 'assistant' 
+                    ? 'bg-[#111] border border-white/5 text-gray-300' 
+                    : 'bg-cyan-500/10 border border-cyan-500/20 text-cyan-100 ml-4'
+                }`}
+              >
+                {msg.content}
+              </div>
+            ))}
+            {isGenerating && (
+              <div className="flex items-center gap-2 text-xs text-gray-500 animate-pulse px-2">
+                <Loader2 size={12} className="animate-spin" />
+                AI is working...
+              </div>
+            )}
           </div>
 
           <div className="p-4 border-t border-white/5">
             <div className="relative">
               <textarea 
-                className="w-full bg-[#161616] border border-white/10 rounded-xl p-3 pt-4 text-sm focus:outline-none focus:border-cyan-500/50 min-h-[120px] resize-none"
+                className="w-full bg-[#161616] border border-white/10 rounded-xl p-3 pt-4 text-sm focus:outline-none focus:border-cyan-500/50 min-h-[100px] resize-none transition-colors"
                 placeholder={viewMode === 'visual' ? "Describe your vision..." : "Technical request..."}
                 value={chatInput}
                 onChange={(e) => setChatInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSendMessage();
+                  }
+                }}
               />
-              <button className="absolute bottom-3 right-3 p-2 bg-cyan-500 rounded-lg text-black hover:bg-cyan-400 transition-colors">
+              <button 
+                onClick={handleSendMessage}
+                disabled={isGenerating || !chatInput.trim()}
+                className="absolute bottom-3 right-3 p-2 bg-cyan-500 rounded-lg text-black hover:bg-cyan-400 transition-all disabled:opacity-50 disabled:bg-gray-800 disabled:text-gray-500"
+              >
                 <Sparkles size={18} />
               </button>
             </div>
@@ -245,7 +375,7 @@ const Editor = () => {
           <>
             <main 
               style={{ width: `${editorWidth}px` }} 
-              className="flex flex-col border-r border-white/5 shrink-0 animate-in fade-in slide-in-from-left-4 duration-300"
+              className="flex flex-col border-r border-white/5 shrink-0 animate-in fade-in slide-in-from-left-4 duration-300 bg-[#0a0a0a]"
             >
               <div className="h-10 bg-[#0f0f0f] border-b border-white/5 flex items-center px-2 gap-1">
                 {['html', 'css', 'js'].map(tab => (
@@ -260,16 +390,16 @@ const Editor = () => {
                   </button>
                 ))}
               </div>
-              <div className="flex-1 font-mono text-sm p-4 overflow-auto bg-[#0d0d0d]">
-                 <pre className="text-cyan-400/80">
-                   {`// Custom ${activeTab.toUpperCase()} logic goes here...\n\nfunction Portfolio() {\n  return (\n    <div className="hero">\n      <h1>Hello World</h1>\n    </div>\n  );\n}`}
-                 </pre>
+              <div className="flex-1 font-mono text-sm p-4 overflow-auto bg-[#0d0d0d] custom-scrollbar">
+                  <pre className="text-cyan-400/80 whitespace-pre-wrap selection:bg-cyan-500/20">
+                    {project?.generatedCode?.[activeTab] || `// No ${activeTab.toUpperCase()} code yet.`}
+                  </pre>
               </div>
               <div className="h-8 bg-[#0a0a0a] border-t border-white/5 flex items-center px-4 justify-between text-[10px] text-gray-500 uppercase tracking-widest">
                 <span>Ln 1, Col 1</span>
                 <div className="flex items-center gap-4">
                   <span>UTF-8</span>
-                  <span>Javascript (React)</span>
+                  <span>{activeTab === 'js' ? 'Javascript' : activeTab.toUpperCase()}</span>
                 </div>
               </div>
             </main>
@@ -285,7 +415,7 @@ const Editor = () => {
         )}
 
         {/* Right: Live Preview */}
-        <section className="flex-1 bg-[#fcfcfc] flex flex-col min-w-[200px]">
+        <section className="flex-1 bg-white flex flex-col min-w-[200px]">
           <div className="h-10 bg-[#0f0f0f] border-b border-white/5 flex items-center justify-between px-4">
              <div className="flex items-center gap-2 text-[11px] text-gray-400 font-bold uppercase tracking-widest">
                <Eye size={14} /> {viewMode === 'visual' ? 'Your Live Portfolio' : 'Preview'}
@@ -294,15 +424,33 @@ const Editor = () => {
                <PanelRightClose size={16} className="text-gray-500 cursor-pointer hover:text-white" />
              </div>
           </div>
-          <div className="flex-1 overflow-auto relative bg-white">
-             {/* The preview canvas */}
-             <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-400 p-8 text-center">
-                <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                  <LayoutGrid className="text-gray-300" size={32} />
-                </div>
-                <h3 className="text-xl font-bold text-gray-800 mb-2">Portfolio Preview</h3>
-                <p className="max-w-xs text-sm">This is where your generated portfolio will appear as you talk to the AI.</p>
-             </div>
+          <div className="flex-1 relative overflow-hidden bg-white">
+              {project?.generatedCode?.html ? (
+                <iframe 
+                  key={JSON.stringify(project.generatedCode)}
+                  title="Portfolio Preview"
+                  srcDoc={getCombinedCode()}
+                  className={`w-full h-full border-none bg-white ${(isResizingSidebar || isResizingEditor) ? 'pointer-events-none' : ''}`}
+                  sandbox="allow-scripts"
+                />
+              ) : (
+               <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-400 p-8 text-center bg-[#0a0a0a]">
+                  <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mb-4 border border-white/10 shadow-2xl">
+                    {isGenerating ? <Loader2 className="animate-spin text-cyan-400" size={32} /> : <LayoutGrid className="text-gray-600" size={32} />}
+                  </div>
+                  <h3 className="text-xl font-bold text-white mb-2">
+                    {isGenerating ? 'Building your portfolio...' : 'Portfolio Preview'}
+                  </h3>
+                  <p className="max-w-xs text-sm text-gray-500 leading-relaxed">
+                    {isGenerating ? 'Our AI is analyzing your profile and writing modern HTML/CSS/JS for your professional portfolio.' : 'Your portfolio will appear here as soon as you analyze your resume.'}
+                  </p>
+                  {isGenerating && (
+                    <div className="mt-8 w-48 h-1 bg-white/5 rounded-full overflow-hidden">
+                      <div className="h-full bg-cyan-500 animate-[progress_2s_ease-in-out_infinite]" style={{ width: '30%' }}></div>
+                    </div>
+                  )}
+               </div>
+             )}
           </div>
         </section>
 

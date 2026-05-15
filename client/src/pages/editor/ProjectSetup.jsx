@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import  { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   FileText, 
@@ -9,7 +9,8 @@ import {
   Sparkles,
   Layout,
   CheckCircle2,
-  Info
+  Info,
+  X
 } from 'lucide-react';
 import Navbar from '../../components/layout/Navbar';
 import Footer from '../../components/layout/Footer';
@@ -18,9 +19,14 @@ import routes from '../../routes';
 
 const ProjectSetup = () => {
   const navigate = useNavigate();
+  const fileInputRef = useRef(null);
   const [step, setStep] = useState(1);
   const [method, setMethod] = useState(null); // 'resume', 'linkedin', 'manual'
   const [loading, setLoading] = useState(false);
+  const [file, setFile] = useState(null);
+  const [parsedData, setParsedData] = useState(null);
+  const [projectName, setProjectName] = useState('');
+  const [targetRole, setTargetRole] = useState('');
 
   const methods = [
     {
@@ -56,15 +62,54 @@ const ProjectSetup = () => {
       navigate(-1);
     } else {
       setStep(1);
+      setFile(null);
+      setParsedData(null);
     }
+  };
+
+  const handleFileSelect = (e) => {
+    const selectedFile = e.target.files[0];
+    const allowedTypes = [
+      'application/pdf', 
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'image/jpeg',
+      'image/png',
+      'image/webp'
+    ];
+    
+    if (selectedFile && allowedTypes.includes(selectedFile.type)) {
+      setFile(selectedFile);
+    } else {
+      alert('Please upload a PDF, DOCX, or Image file.');
+    }
+  };
+
+  const triggerFileInput = () => {
+    fileInputRef.current.click();
   };
 
   const handleFinalize = async () => {
     setLoading(true);
     try {
+      let finalContent = {};
+
+      // If a file is uploaded, parse it first
+      if (file && (method === 'resume' || method === 'linkedin')) {
+        const formData = new FormData();
+        formData.append('resume', file);
+        
+        const parseRes = await API.post('/ai/parse-resume', formData);
+
+
+        if (parseRes.data.success) {
+          finalContent = parseRes.data.data;
+        }
+      }
+
       const res = await API.post('/projects', {
-        title: `My Professional Portfolio`,
-        description: 'Personalized AI Portfolio'
+        title: projectName || `My Professional Portfolio`,
+        description: targetRole || 'Personalized AI Portfolio',
+        content: finalContent
       });
       
       if (res.data.success) {
@@ -72,6 +117,7 @@ const ProjectSetup = () => {
       }
     } catch (err) {
       console.error('Error creating project:', err);
+      alert(err.response?.data?.message || 'Failed to create project. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -87,7 +133,7 @@ const ProjectSetup = () => {
           className="flex items-center gap-2 text-gray-500 hover:text-white transition-colors mb-8 group"
         >
           <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
-          Back to Dashboard
+          {step === 1 ? 'Back to Dashboard' : 'Change Method'}
         </button>
 
         {step === 1 ? (
@@ -130,33 +176,37 @@ const ProjectSetup = () => {
             </div>
 
             <div className="bg-[#111] border border-white/5 rounded-3xl p-10">
-              {method === 'manual' ? (
-                <div className="space-y-8">
-                  <div className="p-6 bg-cyan-500/5 border border-cyan-500/20 rounded-2xl flex items-start gap-4">
-                    <Sparkles className="text-cyan-400 shrink-0" size={24} />
-                    <div>
-                      <p className="text-sm text-cyan-100 font-medium mb-1">Interactive Template Mode</p>
-                      <p className="text-xs text-cyan-100/60">You'll be taken to a live-editable portfolio where you can fill in the sections as you go. AI will assist you in refining the copy.</p>
-                    </div>
+              <div className="space-y-8 mb-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="text-xs uppercase tracking-widest text-gray-500 font-bold">Project Name</label>
+                    <input 
+                      type="text" 
+                      value={projectName}
+                      onChange={(e) => setProjectName(e.target.value)}
+                      placeholder="e.g. Senior Frontend Engineer Portfolio"
+                      className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-cyan-500/50 transition-colors"
+                    />
                   </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <label className="text-xs uppercase tracking-widest text-gray-500 font-bold">Project Name</label>
-                      <input 
-                        type="text" 
-                        placeholder="e.g. Senior Frontend Engineer Portfolio"
-                        className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-cyan-500/50 transition-colors"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-xs uppercase tracking-widest text-gray-500 font-bold">Target Role</label>
-                      <input 
-                        type="text" 
-                        placeholder="e.g. Product Designer"
-                        className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-cyan-500/50 transition-colors"
-                      />
-                    </div>
+                  <div className="space-y-2">
+                    <label className="text-xs uppercase tracking-widest text-gray-500 font-bold">Target Role</label>
+                    <input 
+                      type="text" 
+                      value={targetRole}
+                      onChange={(e) => setTargetRole(e.target.value)}
+                      placeholder="e.g. Product Designer"
+                      className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-cyan-500/50 transition-colors"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {method === 'manual' ? (
+                <div className="p-6 bg-cyan-500/5 border border-cyan-500/20 rounded-2xl flex items-start gap-4">
+                  <Sparkles className="text-cyan-400 shrink-0" size={24} />
+                  <div>
+                    <p className="text-sm text-cyan-100 font-medium mb-1">Interactive Template Mode</p>
+                    <p className="text-xs text-cyan-100/60">You'll be taken to a live-editable portfolio where you can fill in the sections as you go. AI will assist you in refining the copy.</p>
                   </div>
                 </div>
               ) : (
@@ -183,23 +233,54 @@ const ProjectSetup = () => {
                     </div>
                   )}
 
-                  <div className="flex flex-col items-center justify-center py-12 border-2 border-dashed border-white/10 rounded-3xl hover:border-cyan-500/30 transition-colors cursor-pointer group">
-                    <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mb-4 group-hover:bg-cyan-500/10 transition-colors">
-                      <Upload className="text-gray-400 group-hover:text-cyan-400 transition-colors" size={32} />
+                  <input 
+                    type="file" 
+                    ref={fileInputRef}
+                    onChange={handleFileSelect}
+                    accept=".pdf,.docx,.jpg,.jpeg,.png,.webp"
+                    className="hidden"
+                  />
+
+                  {!file ? (
+                    <div 
+                      onClick={triggerFileInput}
+                      className="flex flex-col items-center justify-center py-12 border-2 border-dashed border-white/10 rounded-3xl hover:border-cyan-500/30 transition-colors cursor-pointer group"
+                    >
+                      <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mb-4 group-hover:bg-cyan-500/10 transition-colors">
+                        <Upload className="text-gray-400 group-hover:text-cyan-400 transition-colors" size={32} />
+                      </div>
+                      <p className="font-bold mb-1">Click to upload your {method === 'resume' ? 'Resume' : 'LinkedIn PDF'}</p>
+                      <p className="text-xs text-gray-500 uppercase tracking-tighter">PDF, DOCX, or Images (Max 5MB)</p>
                     </div>
-                    <p className="font-bold mb-1">Click to upload your {method === 'resume' ? 'Resume' : 'LinkedIn PDF'}</p>
-                    <p className="text-xs text-gray-500 uppercase tracking-tighter">PDF Format only (Max 5MB)</p>
-                  </div>
+                  ) : (
+                    <div className="bg-white/5 border border-white/10 rounded-2xl p-6 flex items-center justify-between animate-in fade-in zoom-in-95 duration-300">
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 bg-cyan-500/10 rounded-xl flex items-center justify-center">
+                          <FileText className="text-cyan-400" />
+                        </div>
+                        <div>
+                          <p className="font-bold text-sm truncate max-w-[200px]">{file.name}</p>
+                          <p className="text-xs text-gray-500">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
+                        </div>
+                      </div>
+                      <button 
+                        onClick={() => setFile(null)}
+                        className="p-2 hover:bg-white/5 rounded-full text-gray-500 hover:text-red-400 transition-colors"
+                      >
+                        <X size={20} />
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
 
               <button 
                 onClick={handleFinalize}
-                disabled={loading}
-                className="w-full mt-12 bg-cyan-500 hover:bg-cyan-600 text-black font-bold py-4 rounded-2xl transition-all transform hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2 shadow-xl shadow-cyan-500/20 disabled:opacity-50"
+                disabled={loading || (method !== 'manual' && !file)}
+                className="w-full mt-12 bg-cyan-500 hover:bg-cyan-600 text-black font-bold py-4 rounded-2xl transition-all transform hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2 shadow-xl shadow-cyan-500/20 disabled:opacity-50 disabled:transform-none"
               >
                 {loading ? <CheckCircle2 className="animate-pulse" /> : <Sparkles size={20} />}
-                {loading ? 'Processing Your Story...' : 'Generate My Portfolio'}
+                {loading ? 'AI is analyzing your story...' : 'Generate My Portfolio'}
               </button>
             </div>
           </div>
@@ -212,3 +293,4 @@ const ProjectSetup = () => {
 };
 
 export default ProjectSetup;
+
