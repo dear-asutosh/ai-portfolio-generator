@@ -52,11 +52,11 @@ export default function Navbar() {
 
         {/* Center */}
         <div className="hidden md:flex items-center gap-8 text-sm font-medium">
-          <Link to="/#features" className="text-gray-300 hover:text-white transition-colors">Features</Link>
+          <Link to={routes.features} className="text-gray-300 hover:text-white transition-colors">Features</Link>
           <div className="w-1 h-1 rounded-full bg-white/20"></div>
           <Link to={routes.templates} className="text-gray-300 hover:text-white transition-colors">Templates</Link>
           <div className="w-1 h-1 rounded-full bg-white/20"></div>
-          <Link to="/#how-it-works" className="text-gray-300 hover:text-white transition-colors">How It Works</Link>
+          <Link to={routes.howItWorks} className="text-gray-300 hover:text-white transition-colors">How It Works</Link>
           <div className="w-1 h-1 rounded-full bg-white/20"></div>
           <Link to={routes.pricing} className="text-gray-300 hover:text-white transition-colors">Pricing</Link>
         </div>

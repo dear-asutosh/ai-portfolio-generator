@@ -47,9 +47,15 @@ export default function HowItWorks() {
 
   return (
     <section className="py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-      <h2 className="text-3xl md:text-4xl font-black tracking-tighter mb-16 max-w-2xl text-balance">
-        Three Steps.<br />Five Minutes.<br />One Portfolio.
-      </h2>
+      <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-8">
+        <h2 className="text-3xl md:text-4xl font-black tracking-tighter max-w-2xl text-balance">
+          Three Steps.<br />Five Minutes.<br />One Portfolio.
+        </h2>
+        <a href="/how-it-works" className="text-sm font-mono text-cyan-400 hover:text-white transition-colors flex items-center gap-2 group">
+          SEE FULL PROCESS WALKTHROUGH 
+          <span className="group-hover:translate-x-1 transition-transform">→</span>
+        </a>
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3">
         {steps.map((step, i) => (

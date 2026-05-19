@@ -1,4 +1,6 @@
 import React from 'react';
+import { ArrowRight } from 'lucide-react';
+
 
 export default function TemplateShowcase() {
   const templates = [
@@ -47,11 +49,14 @@ export default function TemplateShowcase() {
         ))}
       </div>
       
-      <div className="px-4 sm:px-6 lg:px-8 mt-4">
+      <div className="px-4 sm:px-6 lg:px-8 mt-12 flex flex-col md:flex-row items-center justify-between gap-6">
         <span className="font-mono text-xs text-muted">
           // Can't find your style?<br />
           // Just describe it to the AI assistant.
         </span>
+        <a href="/templates" className="px-8 py-3 bg-white/5 border border-white/10 rounded-full text-sm font-bold text-white hover:bg-white/10 transition-all flex items-center gap-2">
+          Browse all 50+ Templates <ArrowRight className="w-4 h-4" />
+        </a>
       </div>
     </section>
   );

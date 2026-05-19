@@ -1,5 +1,3 @@
-import React from 'react';
-
 export default function FeaturesBento() {
   return (
     <div className="border-b border-white/10 relative">
@@ -27,9 +25,12 @@ export default function FeaturesBento() {
         {/* Info Area */}
         <div className="lg:pt-8">
           <h2 className="text-3xl font-bold text-white mb-6 tracking-tight">Focus on content, not CSS.</h2>
-          <p className="text-slate-400 leading-relaxed">
+          <p className="text-slate-400 leading-relaxed mb-8">
             PortfolioAI automatically translates your basic info into beautiful, utility-driven code. Choose from dozens of stunning templates without ever touching a stylesheet or worrying about responsiveness.
           </p>
+          <a href="/features" className="inline-flex items-center gap-2 text-cyan-400 font-bold hover:gap-4 transition-all">
+            Explore all features <span className="text-xl">→</span>
+          </a>
         </div>
 
       </div>

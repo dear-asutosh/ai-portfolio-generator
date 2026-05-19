@@ -5,7 +5,10 @@ import { AuthProvider, useAuth } from './context/AuthContext'
 import Navbar from './components/layout/Navbar'
 import Footer from './components/layout/Footer'
 import LandingPage from './pages/LandingPage'
+import FeaturesPage from './pages/features/FeaturesPage'
+import HowItWorksPage from './pages/how-it-works/HowItWorksPage'
 import Dashboard from './pages/dashboard/Dashboard'
+import TemplatesPage from './pages/templates/TemplatesPage'
 import Editor from './pages/editor/Editor'
 import ProjectSetup from './pages/editor/ProjectSetup'
 import LoginPage from './pages/auth/LoginPage'
@@ -45,6 +48,38 @@ const AppContent = () => {
             <>
               <Navbar />
               <LandingPage />
+              <Footer />
+            </>
+          } 
+        />
+        <Route 
+          path={routes.features} 
+          element={
+            <>
+              <Navbar />
+              <FeaturesPage />
+              <Footer />
+            </>
+          } 
+        />
+
+        <Route 
+          path={routes.howItWorks} 
+          element={
+            <>
+              <Navbar />
+              <HowItWorksPage />
+              <Footer />
+            </>
+          } 
+        />
+
+        <Route 
+          path={routes.templates} 
+          element={
+            <>
+              <Navbar />
+              <TemplatesPage />
               <Footer />
             </>
           } 

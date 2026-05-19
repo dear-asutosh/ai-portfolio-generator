@@ -9,12 +9,15 @@ import LiveDeploy from '../components/landing/LiveDeploy';
 import Testimonials from '../components/landing/Testimonials';
 import FAQ from '../components/landing/FAQ';
 import FinalCTA from '../components/landing/FinalCTA';
+import FeaturesBento from '../components/landing/FeaturesBento';
+
 
 const LandingPage = () => {
   return (
     <main className="flex flex-col">
       <Hero />
       <SocialProof />
+      <FeaturesBento />
       <HowItWorks />
       <InputMethods />
       <TemplateShowcase />

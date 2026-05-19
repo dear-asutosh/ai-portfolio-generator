@@ -13,6 +13,8 @@ const routes = {
   },
   templates: "/templates",
   pricing: "/pricing",
+  features: "/features",
+  howItWorks: "/how-it-works",
   docs: "/docs",
   notFound: "*",
 };

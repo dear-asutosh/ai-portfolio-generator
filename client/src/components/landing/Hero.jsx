@@ -128,7 +128,7 @@ export default function Hero() {
             initial={{ x: -100, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             transition={{ duration: 0.8, delay: 0.5 }}
-            className="absolute left-0 top-[20%] w-64 glass-card p-5 rounded-2xl z-20"
+            className="absolute -left-3  top-[37%] w-52 glass-card p-5 rounded-2xl z-20"
           >
             <div className="flex items-center gap-4 mb-4">
               <div className="p-3 rounded-xl bg-indigo-500/20 text-indigo-400">
