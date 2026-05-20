@@ -1,4 +1,4 @@
-const groq = require("../config/groq");
+const getGroqClient = require("../config/groq");
 const pdf = require("pdf-parse");
 
 
@@ -86,6 +86,7 @@ exports.parseResume = async (req, res) => {
     // AI Parsing with Groq
     console.log("Sending text to Groq for parsing...");
     try {
+      const groq = getGroqClient();
       const chatCompletion = await groq.chat.completions.create({
         messages: [
           {
@@ -158,6 +159,7 @@ exports.generatePortfolioData = async (req, res) => {
       });
     }
 
+    const groq = getGroqClient();
     const chatCompletion = await groq.chat.completions.create({
       messages: [
         {
@@ -198,6 +200,7 @@ exports.suggestImprovements = async (req, res) => {
   try {
     const { currentData, prompt } = req.body;
 
+    const groq = getGroqClient();
     const chatCompletion = await groq.chat.completions.create({
       messages: [
         {
@@ -243,6 +246,7 @@ exports.initializePortfolio = async (req, res) => {
     }
 
     console.log("Generating initial portfolio code with Groq...");
+    const groq = getGroqClient();
     
     const prompt = `
       You are a world-class frontend developer and UI/UX designer. 
@@ -301,4 +305,3 @@ exports.initializePortfolio = async (req, res) => {
     });
   }
 };
-

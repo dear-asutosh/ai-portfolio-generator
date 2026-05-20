@@ -3,8 +3,20 @@ const dotenv = require("dotenv");
 
 dotenv.config();
 
-const groq = new Groq({
-  apiKey: process.env.GROQ_API_KEY,
-});
+let groq;
 
-module.exports = groq;
+const getGroqClient = () => {
+  if (!process.env.GROQ_API_KEY) {
+    throw new Error("GROQ_API_KEY environment variable is missing.");
+  }
+
+  if (!groq) {
+    groq = new Groq({
+      apiKey: process.env.GROQ_API_KEY,
+    });
+  }
+
+  return groq;
+};
+
+module.exports = getGroqClient;
