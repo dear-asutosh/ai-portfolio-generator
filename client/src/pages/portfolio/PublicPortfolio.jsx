@@ -61,6 +61,11 @@ const PublicPortfolio = () => {
       );
     }
 
+    const safeJs = String(js || '').replace(
+      /(\b[A-Za-z_$][\w$]*\s*)\.className\s*=\s*(['"])calendar-cell\2\s*;/g,
+      '$1.setAttribute("class", "calendar-cell");'
+    );
+
     const rawCode = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -115,7 +120,13 @@ const PublicPortfolio = () => {
 </head>
 <body>
   ${assembledHtml}
-  <script>(function(){'use strict'; ${js} })();<\/script>
+  <script>
+    window.addEventListener('error', function(event) {
+      console.warn('[Portfolio] Non-fatal script error:', event.message);
+      event.preventDefault();
+    });
+    (function(){'use strict'; try { ${safeJs} } catch (error) { console.warn('[Portfolio] Script initialization skipped:', error.message); } })();
+  <\/script>
 </body>
 </html>`;
 

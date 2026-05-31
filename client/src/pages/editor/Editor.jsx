@@ -241,11 +241,6 @@ const Editor = () => {
 
       if (res.data.success) {
         const { html, css, js, fullPreviewHtml } = res.data.data;
-        
-        // Server already saved to DB via projectId, but update local state
-        await API.put(`/projects/${id}`, {
-          generatedCode: { html, css, js }
-        });
 
         setProject(prev => ({
           ...prev,

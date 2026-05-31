@@ -1208,7 +1208,7 @@ const compileJS = (userData) => {
           rect.setAttribute("data-count", day.count);
           rect.style.cursor = "pointer";
           rect.style.transition = "transform 0.1s";
-          rect.className = "calendar-cell";
+          rect.setAttribute("class", "calendar-cell");
           
           // Simple title tooltip
           const title = document.createElementNS(svgNamespace, "title");
