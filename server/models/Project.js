@@ -34,9 +34,31 @@ const ProjectSchema = new mongoose.Schema({
         css: { type: String, default: '' },
         js: { type: String, default: '' }
     },
+    blueprint: {
+        type: Object, // Stores the PortfolioBlueprint JSON from the Template Intelligence Layer
+        default: {}
+    },
     thumbnail: {
         type: String,
         default: ''
+    },
+    /**
+     * generationPhase — tracks which pipeline stage is currently running.
+     * The client polls GET /api/projects/:id/phase every 1.5s during generation
+     * to drive the cinematic preview loading UI.
+     *
+     * Lifecycle:
+     *   null → 'blueprint' → 'html' → 'css' → 'js' → 'assembling' → 'done'
+     *   On error: 'error'
+     */
+    generationPhase: {
+        type: String,
+        enum: [null, 'blueprint', 'html', 'css', 'js', 'assembling', 'done', 'error'],
+        default: null
+    },
+    views: {
+        type: Number,
+        default: 0
     }
 
 }, {

@@ -1,15 +1,9 @@
 require('dotenv').config();
 const dns = require('dns');
 
-// Fix for MongoDB Atlas connection issues on some Windows machines
-if (process.env.NODE_ENV !== 'production') {
-    dns.setDefaultResultOrder('ipv4first');
-    try {
-        dns.setServers(['8.8.8.8', '8.8.4.4']);
-    } catch (e) {
-        console.log('Note: Could not set custom DNS servers, using system defaults.');
-    }
-}
+// Fix: System DNS can't resolve MongoDB Atlas SRV records on this network
+dns.setDefaultResultOrder('ipv4first');
+try { dns.setServers(['1.1.1.1', '1.0.0.1', '8.8.8.8', '8.8.4.4']); } catch (e) {}
 
 const express = require('express');
 const cors = require('cors');

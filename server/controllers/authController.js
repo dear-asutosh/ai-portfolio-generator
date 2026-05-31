@@ -63,11 +63,11 @@ exports.updateDetails = async (req, res, next) => {
             name: req.body.name,
             bio: req.body.bio,
             avatar: req.body.avatar,
-            username: req.body.username
+            username: typeof req.body.username === 'string' ? req.body.username.toLowerCase() : req.body.username
         };
 
         const user = await User.findByIdAndUpdate(req.user.id, fieldsToUpdate, {
-            new: true,
+            returnDocument: 'after',
             runValidators: true
         });
 
