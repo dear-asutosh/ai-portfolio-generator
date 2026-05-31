@@ -3,10 +3,10 @@ import React from 'react';
 export default function AIChatModifier() {
   const features = [
     "Change colors, fonts, layouts with words",
-    "Rewrite any section instantly",
-    "Switch templates without losing your data",
-    "Preview all changes before going live",
-    "Works like Figma — but you use sentences"
+    "Rewrite or expand any section instantly",
+    "Fine-tune styles and content just by talking",
+    "Preview all changes in real time before going live",
+    "Works like Figma — but you use simple sentences"
   ];
 
   return (

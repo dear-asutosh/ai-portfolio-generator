@@ -3,7 +3,6 @@ import Hero from '../components/landing/Hero';
 import SocialProof from '../components/landing/SocialProof';
 import HowItWorks from '../components/landing/HowItWorks';
 import InputMethods from '../components/landing/InputMethods';
-import TemplateShowcase from '../components/landing/TemplateShowcase';
 import AIChatModifier from '../components/landing/AIChatModifier';
 import LiveDeploy from '../components/landing/LiveDeploy';
 import Testimonials from '../components/landing/Testimonials';
@@ -20,7 +19,6 @@ const LandingPage = () => {
       <FeaturesBento />
       <HowItWorks />
       <InputMethods />
-      <TemplateShowcase />
       <AIChatModifier />
       <LiveDeploy />
       <Testimonials />

@@ -24,12 +24,12 @@ export default function FeaturesBento() {
 
         {/* Info Area */}
         <div className="lg:pt-8">
-          <h2 className="text-3xl font-bold text-white mb-6 tracking-tight">Focus on content, not CSS.</h2>
+          <h2 className="text-3xl font-bold text-white mb-6 tracking-tight">Engineered for Developers. No Layout Hallucinations.</h2>
           <p className="text-slate-400 leading-relaxed mb-8">
-            PortfolioAI automatically translates your basic info into beautiful, utility-driven code. Choose from dozens of stunning templates without ever touching a stylesheet or worrying about responsiveness.
+            Profilio instantly compiles your credentials into a high-performance portfolio based on the premium <strong>Profilio Design System V1</strong>. No messy code layouts or templates that break. Get real interactive timeline accordions, live tooltipped tech stacks, live contribution grids, and a functional built-in conversational AI chatbot widget.
           </p>
           <a href="/features" className="inline-flex items-center gap-2 text-cyan-400 font-bold hover:gap-4 transition-all">
-            Explore all features <span className="text-xl">→</span>
+            Explore developer features <span className="text-xl">→</span>
           </a>
         </div>
 

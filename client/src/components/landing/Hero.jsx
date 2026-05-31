@@ -1,8 +1,10 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Sparkles, FileText, Globe, ArrowRight, Play } from 'lucide-react';
 
 export default function Hero() {
+  const navigate = useNavigate();
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -44,7 +46,7 @@ export default function Hero() {
             variants={itemVariants}
             className="text-5xl md:text-6xl font-semibold tracking-tight mb-8"
           >
-            Build Your Own <span className="gradient-text">Identity</span> With <span className="gradient-text">Profilio</span>
+            Build Your Developer <span className="gradient-text">Identity</span> With <span className="gradient-text">Profilio</span>
           </motion.h1>
 
           {/* Subheadline */}
@@ -52,7 +54,7 @@ export default function Hero() {
             variants={itemVariants}
             className="text-lg text-slate-400 max-w-xl mb-12 leading-relaxed"
           >
-            Upload your resume, paste your LinkedIn profile, or fill a guided form. Profilio uses <span className="text-white font-medium">Groq AI</span> to generate a polished portfolio website and publishes it to your own shareable URL in minutes.
+            Upload your resume, import your LinkedIn, or seed your GitHub profile. Profilio instantly compiles a premium, high-performance portfolio featuring live GitHub repo cards, dynamic LeetCode progress dashboards, and a custom conversational chatbot widget to act as your personal 24/7 assistant.
           </motion.p>
 
           {/* CTAs */}
@@ -60,11 +62,17 @@ export default function Hero() {
             variants={itemVariants}
             className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto mb-10"
           >
-            <button className="relative group overflow-hidden bg-indigo-600 px-8 py-4 rounded-xl font-bold text-lg hover:bg-indigo-500 transition-all shadow-[0_0_20px_rgba(79,70,229,0.4)] flex items-center justify-center gap-2">
+            <button 
+              onClick={() => navigate('/project/new')}
+              className="relative group overflow-hidden bg-indigo-600 px-8 py-4 rounded-xl font-bold text-lg hover:bg-indigo-500 transition-all shadow-[0_0_20px_rgba(79,70,229,0.4)] flex items-center justify-center gap-2 cursor-pointer"
+            >
               <span className="relative z-10">Generate My Portfolio</span>
               <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </button>
-            <button className="px-8 py-4 rounded-xl border border-white/10 bg-white/5 backdrop-blur-md font-bold text-lg hover:bg-white/10 transition-all flex items-center justify-center gap-2">
+            <button 
+              onClick={() => window.scrollTo({ top: 850, behavior: 'smooth' })}
+              className="px-8 py-4 rounded-xl border border-white/10 bg-white/5 backdrop-blur-md font-bold text-lg hover:bg-white/10 transition-all flex items-center justify-center gap-2 cursor-pointer"
+            >
               <Play className="w-4 h-4 fill-current" />
               <span>View Demo</span>
             </button>

@@ -24,7 +24,7 @@ export default function Footer() {
           {/* Col 2 */}
           <div className="flex flex-col gap-3">
             <h4 className="font-mono text-xs font-bold text-white mb-2 uppercase tracking-wider">Product</h4>
-            {['Features', 'Templates', 'How It Works', 'Pricing', 'Changelog'].map(link => (
+            {['Features', 'How It Works', 'Pricing', 'Changelog'].map(link => (
               <a key={link} href="#" className="font-sans text-sm text-muted hover:text-white transition-colors">{link}</a>
             ))}
           </div>

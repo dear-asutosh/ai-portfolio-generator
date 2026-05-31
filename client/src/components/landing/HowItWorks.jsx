@@ -32,16 +32,16 @@ export default function HowItWorks() {
     {
       label: "step-03",
       num: "3",
-      title: "Pick Template and Deploy",
+      title: "Compile and Fine-tune",
       code: (
         <>
-          <span className="text-[#6366f1]">template:</span> <span className="text-emerald-400">"developer-dark"</span>{'\n'}
-          <span className="text-[#6366f1]">deploy:</span> <span className="text-amber-400">true</span>{'\n'}
-          <span className="text-[#6366f1]">url:</span> <span className="text-emerald-400">"portfolioai.app/yourname"</span>{'\n'}
-          <span className="text-[#6366f1]">status:</span> <span className="text-emerald-400">"● live"</span>
+          compile(<span className="text-emerald-400">"ProfilioV1"</span>){'\n'}
+          integrate(<span className="text-amber-400">"GitHub/LeetCode"</span>){'\n'}
+          deploy_live(<span className="text-[#06b6d4]">"portfolioai.app/yourname"</span>){'\n'}
+          status: <span className="text-emerald-400">"● live"</span>
         </>
       ),
-      body: "Choose a template, customize by chatting with the AI assistant, hit publish — your portfolio goes live in seconds."
+      body: "Instant programmatic compilation builds the page. Tweak style properties or fine-tune content using the real-time AI modifier."
     }
   ];
 

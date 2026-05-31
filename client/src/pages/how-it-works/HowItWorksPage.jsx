@@ -106,8 +106,8 @@ const HowItWorksPage = () => {
           />
           <StepSection 
             number="03"
-            title="Pick and Customize"
-            description="Choose from a curated set of developer-first templates. Use our AI Chat Modifier to tweak the design, add sections, or change the vibe just by typing."
+            title="Personalize and Tweak"
+            description="Tailor the design to your brand. Use our AI Chat Modifier to tweak layouts, add custom sections, or adjust the entire aesthetic just by typing."
             icon={Edit3}
           />
           <StepSection 

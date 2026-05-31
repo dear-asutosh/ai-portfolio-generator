@@ -46,8 +46,8 @@ const FeaturesPage = () => {
     },
     {
       icon: Layout,
-      title: "Premium Templates",
-      description: "Hand-crafted, developer-focused templates designed to make you stand out. Fully responsive and SEO optimized out of the box.",
+      title: "AI-Generated Design",
+      description: "A premium, developer-focused design system tailored to make you stand out. Fully responsive, pixel-perfect, and SEO optimized out of the box.",
       delay: 0.3
     },
     {
@@ -157,7 +157,7 @@ const FeaturesPage = () => {
                   <p className="text-gray-400">{">"} Extracting stack: <span className="text-amber-400">React, Go, K8s, GraphQL</span></p>
                   <p className="text-gray-400">{">"} Generating bio: <span className="text-white italic">"Experienced architect with a focus on..."</span></p>
                 </div>
-                <p className="text-cyan-400 animate-pulse"># Mapping to Template: Minimalist_Dark...</p>
+                <p className="text-cyan-400 animate-pulse"># Compiling Design: Profilio V1 Dark...</p>
               </div>
             </div>
           </motion.div>
