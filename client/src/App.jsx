@@ -8,7 +8,6 @@ import LandingPage from './pages/LandingPage'
 import FeaturesPage from './pages/features/FeaturesPage'
 import HowItWorksPage from './pages/how-it-works/HowItWorksPage'
 import Dashboard from './pages/dashboard/Dashboard'
-import TemplatesPage from './pages/templates/TemplatesPage'
 import Editor from './pages/editor/Editor'
 import ProjectSetup from './pages/editor/ProjectSetup'
 import LoginPage from './pages/auth/LoginPage'
@@ -16,6 +15,7 @@ import SignupPage from './pages/auth/SignupPage'
 import AuthSuccess from './pages/auth/AuthSuccess'
 import SettingsPage from './pages/settings/SettingsPage'
 import NotFoundPage from './pages/error/NotFoundPage'
+import PublicPortfolio from './pages/portfolio/PublicPortfolio'
 
 // A simple wrapper for protected routes
 const ProtectedRoute = ({ children }) => {
@@ -74,20 +74,15 @@ const AppContent = () => {
           } 
         />
 
-        <Route 
-          path={routes.templates} 
-          element={
-            <>
-              <Navbar />
-              <TemplatesPage />
-              <Footer />
-            </>
-          } 
-        />
-        
+
         <Route path={routes.auth.login} element={<LoginPage />} />
         <Route path={routes.auth.signup} element={<SignupPage />} />
         <Route path={routes.auth.success} element={<AuthSuccess />} />
+
+        {/* Public Portfolio Views (Unauthenticated) */}
+        <Route path={routes.publicPortfolio} element={<PublicPortfolio />} />
+        <Route path={routes.publicPortfolioDefault} element={<PublicPortfolio />} />
+        <Route path={routes.publicPortfolioById} element={<PublicPortfolio />} />
 
         {/* Dashboard Route (Protected) */}
         <Route 
@@ -118,9 +113,7 @@ const AppContent = () => {
           path={routes.project.new} 
           element={
             <ProtectedRoute>
-              <Navbar />
               <ProjectSetup />
-              <Footer />
             </ProtectedRoute>
           } 
         />

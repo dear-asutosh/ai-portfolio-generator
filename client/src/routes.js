@@ -11,11 +11,11 @@ const routes = {
     index: "/project/:id",
     new: "/project/new",
   },
-  templates: "/templates",
-  pricing: "/pricing",
+  publicPortfolio: "/u/:username/:slug",
+  publicPortfolioDefault: "/u/:username",
+  publicPortfolioById: "/portfolio/:id",
   features: "/features",
   howItWorks: "/how-it-works",
-  docs: "/docs",
   notFound: "*",
 };
 
