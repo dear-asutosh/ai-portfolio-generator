@@ -225,10 +225,22 @@ const Dashboard = () => {
                           day: 'numeric' 
                         })}
                       </div>
-                      <div className="flex items-center gap-1 hover:text-white transition-colors">
-                        <ExternalLink size={14} />
-                        Preview
-                      </div>
+                      {project.status === 'Live' ? (
+                        <a 
+                          href={`/u/${user?.username}/${project.slug}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          className="flex items-center gap-1 hover:text-cyan-400 text-cyan-500 font-bold transition-colors"
+                        >
+                          <ExternalLink size={14} />
+                          Live Site
+                        </a>
+                      ) : (
+                        <div className="flex items-center gap-1 text-yellow-500/80 font-semibold text-xs">
+                          Draft
+                        </div>
+                      )}
                     </div>
                   </div>
                 </Link>
