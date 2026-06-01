@@ -84,47 +84,58 @@ const cleanAndParseJSON = (str) => {
  * (but no visible text printed in the PDF) are successfully extracted.
  */
 async function extractPDFLinks(buffer) {
+  const urls = [];
+
+  // ── Phase 1: unpdf annotation extraction ──────────────────────────────
   try {
     const { getDocumentProxy, extractLinks } = require('unpdf');
     const pdf = await getDocumentProxy(new Uint8Array(buffer));
-    const linksData = await extractLinks(pdf);
+    const result = await extractLinks(pdf);
+
+    // extractLinks returns { totalPages: number, links: string[] }
+    const linksArray = result?.links || result?.urls || (Array.isArray(result) ? result : []);
     
-    const urls = [];
-    if (Array.isArray(linksData)) {
-      linksData.forEach(item => {
-        if (typeof item === 'string') {
-          urls.push(item);
+    if (Array.isArray(linksArray)) {
+      linksArray.forEach(item => {
+        if (typeof item === 'string' && item.trim()) {
+          urls.push(item.trim());
         } else if (item && typeof item === 'object') {
           const url = item.url || item.dest || item.href || '';
-          if (url) urls.push(url);
+          if (url) urls.push(url.trim());
         }
       });
     }
-    
-    // Fallback: also do a binary regex check for plain-text HTTP URLs to be doubly safe
+    console.log(`[extractPDFLinks] unpdf found ${urls.length} annotation links`);
+  } catch (err) {
+    console.error('[extractPDFLinks] unpdf extraction error:', err.message);
+  }
+
+  // ── Phase 2: Binary regex scan (catches URLs in raw PDF stream) ───────
+  try {
     const binary = buffer.toString('binary');
-    const rawUrlPattern = /(https?:\/\/[^\s()<>{}|\\^~[\]`"';]+)/gi;
+
+    // 2a. Standard https:// URLs
+    const httpsPattern = /(https?:\/\/[^\s()<>{}|\\^~[\]`"';]+)/gi;
     let match;
-    while ((match = rawUrlPattern.exec(binary)) !== null) {
+    while ((match = httpsPattern.exec(binary)) !== null) {
       let url = match[1].replace(/[.,;:!?'")\]]+$/, '');
       urls.push(url);
     }
 
-    return [...new Set(urls.map(u => u.trim()))];
-  } catch (err) {
-    console.error('[extractPDFLinks] unpdf extraction error:', err.message);
-    
-    // Fallback on exception: do basic binary regex parsing
-    const binary = buffer.toString('binary');
-    const links = [];
-    const rawUrlPattern = /(https?:\/\/[^\s()<>{}|\\^~[\]`"';]+)/gi;
-    let match;
-    while ((match = rawUrlPattern.exec(binary)) !== null) {
-      let url = match[1].replace(/[.,;:!?'")\]]+$/, '');
-      links.push(url);
+    // 2b. Protocol-less social platform URLs (very common in resumes)
+    // Matches patterns like: linkedin.com/in/user, github.com/user, leetcode.com/u/user
+    const socialPattern = /((?:linkedin\.com|github\.com|leetcode\.com)\/[^\s()<>{}|\\^~[\]`"';,]+)/gi;
+    while ((match = socialPattern.exec(binary)) !== null) {
+      let url = match[1].replace(/[.,;:!?'")\]]+$/, '').trim();
+      if (url) urls.push(url);
     }
-    return [...new Set(links)];
+  } catch (regexErr) {
+    console.error('[extractPDFLinks] Binary regex scan error:', regexErr.message);
   }
+
+  const deduped = [...new Set(urls.map(u => u.trim()).filter(Boolean))];
+  console.log(`[extractPDFLinks] Total unique URLs found: ${deduped.length}`);
+  return deduped;
 }
 
 /**
@@ -262,8 +273,20 @@ exports.parseResume = async (req, res) => {
         const parsedData = cleanAndParseJSON(content);
 
         // --- Post-Processing Social Links Auto-Recovery ---
-        // 1. Extract all URLs from extractedText via regex
+        // 1a. Extract all full URLs from extractedText via regex
         const textUrls = extractedText.match(/(https?:\/\/[^\s"<>()[\]{}|\\^~`']+)/gi) || [];
+        
+        // 1b. Extract protocol-less social platform URLs (very common in resumes)
+        const barePattern = /((?:linkedin\.com|github\.com|leetcode\.com)\/[^\s"<>()[\]{}|\\^~`',]+)/gi;
+        const bareMatches = extractedText.match(barePattern) || [];
+        
+        // 1c. Extract href attributes from DOCX HTML output (mammoth converts links to <a href="...">)
+        const hrefPattern = /href=["'](https?:\/\/[^"']+)["']/gi;
+        let hrefMatch;
+        const hrefUrls = [];
+        while ((hrefMatch = hrefPattern.exec(extractedText)) !== null) {
+          hrefUrls.push(hrefMatch[1]);
+        }
         
         // 2. Also extract PDF links from buffer if PDF
         let pdfUrls = [];
@@ -276,8 +299,8 @@ exports.parseResume = async (req, res) => {
         }
         
         // Combine and deduplicate
-        const allExtractedUrls = [...new Set([...textUrls, ...pdfUrls])];
-        console.log(`[Post-Processor] Extracted ${allExtractedUrls.length} absolute URLs from resume file.`);
+        const allExtractedUrls = [...new Set([...textUrls, ...bareMatches, ...hrefUrls, ...pdfUrls])];
+        console.log(`[Post-Processor] Extracted ${allExtractedUrls.length} URLs from resume file.`);
 
         // Standardize parsedData structure
         parsedData.personalInfo = parsedData.personalInfo || {};
@@ -294,32 +317,45 @@ exports.parseResume = async (req, res) => {
           return urlStr.includes('.') || urlStr.includes('/') || urlStr.startsWith('http');
         });
 
-        // Track platforms we have valid URLs for
-        const platformsFound = { github: false, linkedin: false, leetcode: false };
-        socialLinks.forEach(item => {
-          const urlStr = (typeof item === 'string' ? item : (item.url || item.link || '')).toString().toLowerCase();
-          if (urlStr.includes('github.com')) platformsFound.github = true;
-          if (urlStr.includes('linkedin.com')) platformsFound.linkedin = true;
-          if (urlStr.includes('leetcode.com')) platformsFound.leetcode = true;
-        });
-
-        // Scan all extracted URLs to fill in any missing platforms
+        // Ground-truth: collect the FIRST URL for each platform extracted directly
+        // from the resume binary/text. These ALWAYS override AI-generated URLs
+        // because the AI frequently fabricates usernames from the person's name.
+        const platformDomains = {
+          github: 'github.com',
+          linkedin: 'linkedin.com',
+          leetcode: 'leetcode.com'
+        };
+        const groundTruth = {};
         allExtractedUrls.forEach(url => {
           const urlLower = url.toLowerCase();
-          if (urlLower.includes('github.com') && !platformsFound.github) {
-            socialLinks.push({ platform: 'github', url });
-            platformsFound.github = true;
-            console.log(`[Post-Processor] Auto-recovered GitHub URL: ${url}`);
-          } else if (urlLower.includes('linkedin.com') && !platformsFound.linkedin) {
-            socialLinks.push({ platform: 'linkedin', url });
-            platformsFound.linkedin = true;
-            console.log(`[Post-Processor] Auto-recovered LinkedIn URL: ${url}`);
-          } else if (urlLower.includes('leetcode.com') && !platformsFound.leetcode) {
-            socialLinks.push({ platform: 'leetcode', url });
-            platformsFound.leetcode = true;
-            console.log(`[Post-Processor] Auto-recovered LeetCode URL: ${url}`);
+          for (const [platform, domain] of Object.entries(platformDomains)) {
+            if (urlLower.includes(domain) && !groundTruth[platform]) {
+              groundTruth[platform] = url;
+            }
           }
         });
+
+        // For each platform with a ground-truth URL, REPLACE any AI-generated entry
+        for (const [platform, truthUrl] of Object.entries(groundTruth)) {
+          const domain = platformDomains[platform];
+
+          // Remove AI-generated entries for this platform (may contain wrong usernames)
+          socialLinks = socialLinks.filter(item => {
+            if (typeof item === 'string') return !item.toLowerCase().includes(domain);
+            if (typeof item === 'object' && item) {
+              const p = (item.platform || item.name || '').toString().toLowerCase();
+              const u = (item.url || item.link || '').toString().toLowerCase();
+              return p !== platform && !u.includes(domain);
+            }
+            return true;
+          });
+
+          socialLinks.push({ platform, url: truthUrl });
+          console.log(`[Post-Processor] ✓ Ground-truth ${platform} URL: ${truthUrl}`);
+        }
+
+        // For platforms NOT found in ground-truth, keep any valid AI-generated entries
+        // (they are already in socialLinks from the filter step above)
 
         parsedData.personalInfo.socialLinks = socialLinks;
 
@@ -526,13 +562,8 @@ async function initializePortfolioBlueprintMode(req, res, { userData, targetRole
     (userData.education && userData.education.length > 0)
   );
 
-  const { normalizeSocialLinks } = require("../utils/urlHelpers");
-  const rawLinks = userData?.personalInfo?.socialLinks || [];
-  const normalizedLinks = normalizeSocialLinks(rawLinks);
-  console.log("\n=======================================================");
-  console.log("⚡ PORTFOLIO INITIALIZER - NORMALIZED SOCIAL LINKS:");
-  console.log(JSON.stringify(normalizedLinks, null, 2));
-  console.log("=======================================================\n");
+
+
 
   const normalizedUserData = {
     personalInfo: {

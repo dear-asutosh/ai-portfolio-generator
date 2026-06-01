@@ -4,39 +4,28 @@
 
 /**
  * Helper to guarantee all external links start with an absolute protocol.
- * Standardizes common platforms (LinkedIn, GitHub) and adds https:// if missing.
+ * Only adds https:// if missing. Does NOT modify domains, paths, or
+ * any other part of the URL — preserves the original extracted URL exactly.
  *
  * @param {string} url - Raw URL string
- * @returns {string} - Cleaned absolute URL
+ * @returns {string} - URL with protocol prefix guaranteed
  */
 const ensureAbsoluteUrl = (url) => {
   if (!url) return '';
-  let cleanUrl = url.trim();
-  
-  // Standardize the URL by stripping any existing protocol/www temporarily
-  let standardUrl = cleanUrl.replace(/^(https?:\/\/)?(www\.)?/i, '');
-  
-  if (standardUrl.toLowerCase().startsWith('linkedin.com')) {
-    let path = standardUrl.substring('linkedin.com'.length);
-    if (path && !path.endsWith('/')) {
-      path += '/';
-    }
-    return `https://www.linkedin.com${path}`;
-  }
-  
-  if (standardUrl.toLowerCase().startsWith('github.com')) {
-    let path = standardUrl.substring('github.com'.length);
-    path = path.replace(/\/$/, '');
-    return `https://www.github.com${path}`;
+  const cleanUrl = url.trim();
+
+  // Already has a full protocol — return the original URL untouched
+  if (/^https?:\/\//i.test(cleanUrl)) {
+    return cleanUrl;
   }
 
-  if (!/^https?:\/\//i.test(cleanUrl)) {
-    if (cleanUrl.startsWith('//')) {
-      return `https:${cleanUrl}`;
-    }
-    return `https://${cleanUrl}`;
+  // Protocol-relative URL (e.g. //github.com/user)
+  if (cleanUrl.startsWith('//')) {
+    return `https:${cleanUrl}`;
   }
-  return cleanUrl;
+
+  // No protocol at all — just prepend https://
+  return `https://${cleanUrl}`;
 };
 
 /**
