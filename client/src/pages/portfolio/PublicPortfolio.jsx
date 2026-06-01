@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Eye, Edit2, Loader2, AlertTriangle, ArrowLeft, Sparkles } from 'lucide-react';
+import { Eye, Edit2, Loader2, AlertTriangle, ArrowLeft, Sparkles, ChevronUp, ChevronDown } from 'lucide-react';
 import API from '../../apis/api';
 import { useAuth } from '../../context/AuthContext';
 
@@ -11,6 +11,7 @@ const PublicPortfolio = () => {
   const [project, setProject] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isOverlayExpanded, setIsOverlayExpanded] = useState(false);
 
   useEffect(() => {
     const fetchPublicPortfolio = async () => {
@@ -218,30 +219,50 @@ const PublicPortfolio = () => {
         sandbox="allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox"
       />
 
-      {/* Floating brand and control badge */}
-      <div className="fixed bottom-5 right-5 z-50 flex items-center gap-3">
-        {isOwner && (
-          <Link 
-            to={`/project/${project._id}`}
-            className="flex items-center gap-2 px-4 py-2.5 bg-black/85 hover:bg-cyan-500 border border-white/10 text-white hover:text-black rounded-xl text-xs font-bold font-mono tracking-wider shadow-2xl backdrop-blur-md transition-all uppercase group hover:-translate-y-1 active:translate-y-0"
-            title="Return to AI Workspace Editor"
-          >
-            <Edit2 size={12} className="group-hover:rotate-12 transition-transform" /> Edit Portfolio
-          </Link>
+      {/* Collapsible floating brand and control badge */}
+      <div className="fixed bottom-5 left-5 z-50 flex flex-col items-start gap-2">
+        {/* Expanded action bar */}
+        {isOverlayExpanded && (
+          <div className="flex items-center gap-3 animate-in fade-in slide-in-from-bottom-2 duration-200">
+            {isOwner && (
+              <Link 
+                to={`/project/${project._id}`}
+                className="flex items-center gap-2 px-4 py-2.5 bg-black/85 hover:bg-cyan-500 border border-white/10 text-white hover:text-black rounded-xl text-xs font-bold font-mono tracking-wider shadow-2xl backdrop-blur-md transition-all uppercase group hover:-translate-y-1 active:translate-y-0"
+                title="Return to AI Workspace Editor"
+              >
+                <Edit2 size={12} className="group-hover:rotate-12 transition-transform" /> Edit Portfolio
+              </Link>
+            )}
+
+            <div className="group relative flex items-center">
+              <Link 
+                to="/"
+                className="flex items-center gap-2 px-4 py-2.5 bg-black/85 border border-white/10 text-white rounded-xl text-xs font-bold font-mono tracking-wider shadow-2xl backdrop-blur-md transition-all uppercase overflow-hidden hover:-translate-y-1 active:translate-y-0"
+              >
+                <Sparkles size={12} className="text-cyan-400 animate-pulse" />
+                <span className="max-w-0 overflow-hidden group-hover:max-w-[120px] transition-all duration-500 ease-in-out inline-block whitespace-nowrap text-[10px] text-gray-300">
+                  Build yours at
+                </span>
+                <span>PROFILIO</span>
+              </Link>
+            </div>
+          </div>
         )}
 
-        <div className="group relative flex items-center">
-          <Link 
-            to="/"
-            className="flex items-center gap-2 px-4 py-2.5 bg-black/85 border border-white/10 text-white rounded-xl text-xs font-bold font-mono tracking-wider shadow-2xl backdrop-blur-md transition-all uppercase overflow-hidden hover:-translate-y-1 active:translate-y-0"
-          >
-            <Sparkles size={12} className="text-cyan-400 animate-pulse" />
-            <span className="max-w-0 overflow-hidden group-hover:max-w-[120px] transition-all duration-500 ease-in-out inline-block whitespace-nowrap text-[10px] text-gray-300">
-              Build yours at
-            </span>
-            <span>PROFILIO</span>
-          </Link>
-        </div>
+        {/* Toggle button — always visible */}
+        <button
+          onClick={() => setIsOverlayExpanded(prev => !prev)}
+          className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold font-mono tracking-wider shadow-2xl backdrop-blur-md transition-all border ${
+            isOverlayExpanded
+              ? 'bg-white/10 border-white/20 text-white hover:bg-white/15'
+              : 'bg-black/85 border-white/10 text-white hover:bg-white/10'
+          }`}
+          title={isOverlayExpanded ? 'Collapse overlay' : 'Show actions'}
+        >
+          <Sparkles size={10} className="text-cyan-400" />
+          {!isOverlayExpanded && <span className="text-[10px] uppercase tracking-widest">Profilio</span>}
+          {isOverlayExpanded ? <ChevronDown size={12} /> : <ChevronUp size={12} />}
+        </button>
       </div>
     </div>
   );

@@ -257,7 +257,7 @@ const Editor = () => {
 
         setNotification({
           type: 'success',
-          message: 'Portfolio initialized successfully!'
+          message: 'Portfolio generated successfully!'
         });
       }
     } catch (err) {
