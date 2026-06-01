@@ -79,8 +79,19 @@ const normalizeSocialLinks = (socialLinks) => {
       } 
       // 2b. Struct object (e.g. { platform: "github", url: "..." } or { name: "github", link: "..." })
       else if (typeof item === 'object') {
-        const platform = (item.platform || item.name || item.label || item.type || '').toString().toLowerCase();
-        const url = (item.url || item.link || item.href || '').toString().trim();
+        let platform = (item.platform || item.name || item.label || item.type || '').toString().toLowerCase();
+        let url = (item.url || item.link || item.href || '').toString().trim();
+        
+        // Robust fallback: if standard keys are missing, check if any key matches a platform directly
+        if (url.length === 0) {
+          for (const [key, val] of Object.entries(item)) {
+            if (['github', 'linkedin', 'leetcode', 'instagram'].includes(key.toLowerCase()) && typeof val === 'string' && val.trim().length > 0) {
+              platform = key.toLowerCase();
+              url = val.trim();
+              break;
+            }
+          }
+        }
         
         if (url.length > 0) {
           const absUrl = ensureAbsoluteUrl(url);

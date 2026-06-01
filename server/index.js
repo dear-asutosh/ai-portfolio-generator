@@ -48,8 +48,7 @@ app.use(cors({
         // allow requests with no origin (like mobile apps or curl requests)
         if (!origin) return callback(null, true);
         if (allowedOrigins.indexOf(origin) === -1) {
-            const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
-            return callback(new Error(msg), false);
+            return callback(null, false);
         }
         return callback(null, true);
     },
@@ -82,6 +81,14 @@ app.get('/api/health', (req, res) => {
 // Global Error Handler
 app.use((err, req, res, next) => {
     console.error(err.stack);
+    
+    // Fallback CORS headers in error handler if origin is allowed
+    const origin = req.headers.origin;
+    if (origin && allowedOrigins.includes(origin)) {
+        res.setHeader('Access-Control-Allow-Origin', origin);
+        res.setHeader('Access-Control-Allow-Credentials', 'true');
+    }
+    
     const errorMessage = process.env.NODE_ENV === 'production' ? 'Server Error' : err.message;
     res.status(500).json({
         success: false,

@@ -83,47 +83,48 @@ const cleanAndParseJSON = (str) => {
  * This ensures that social media links and icons that have hyperlink annotations
  * (but no visible text printed in the PDF) are successfully extracted.
  */
-function extractPDFLinks(buffer) {
-  const binary = buffer.toString('binary');
-  const links = [];
-  
-  // 1. Match literal strings: /URI (http...) or /URI (mailto:...)
-  const literalPattern = /\/URI\s*\(([^)]+)\)/gi;
-  let match;
-  while ((match = literalPattern.exec(binary)) !== null) {
-    const url = match[1].trim();
-    if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('mailto:')) {
+async function extractPDFLinks(buffer) {
+  try {
+    const { getDocumentProxy, extractLinks } = require('unpdf');
+    const pdf = await getDocumentProxy(new Uint8Array(buffer));
+    const linksData = await extractLinks(pdf);
+    
+    const urls = [];
+    if (Array.isArray(linksData)) {
+      linksData.forEach(item => {
+        if (typeof item === 'string') {
+          urls.push(item);
+        } else if (item && typeof item === 'object') {
+          const url = item.url || item.dest || item.href || '';
+          if (url) urls.push(url);
+        }
+      });
+    }
+    
+    // Fallback: also do a binary regex check for plain-text HTTP URLs to be doubly safe
+    const binary = buffer.toString('binary');
+    const rawUrlPattern = /(https?:\/\/[^\s()<>{}|\\^~[\]`"';]+)/gi;
+    let match;
+    while ((match = rawUrlPattern.exec(binary)) !== null) {
+      let url = match[1].replace(/[.,;:!?'")\]]+$/, '');
+      urls.push(url);
+    }
+
+    return [...new Set(urls.map(u => u.trim()))];
+  } catch (err) {
+    console.error('[extractPDFLinks] unpdf extraction error:', err.message);
+    
+    // Fallback on exception: do basic binary regex parsing
+    const binary = buffer.toString('binary');
+    const links = [];
+    const rawUrlPattern = /(https?:\/\/[^\s()<>{}|\\^~[\]`"';]+)/gi;
+    let match;
+    while ((match = rawUrlPattern.exec(binary)) !== null) {
+      let url = match[1].replace(/[.,;:!?'")\]]+$/, '');
       links.push(url);
     }
+    return [...new Set(links)];
   }
-  
-  // 2. Match hex strings: /URI <hex...>
-  const hexPattern = /\/URI\s*<([0-9a-fA-F]+)>/gi;
-  while ((match = hexPattern.exec(binary)) !== null) {
-    try {
-      const hex = match[1];
-      let str = '';
-      for (let i = 0; i < hex.length; i += 2) {
-        str += String.fromCharCode(parseInt(hex.substr(i, 2), 16));
-      }
-      const url = str.trim();
-      if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('mailto:')) {
-        links.push(url);
-      }
-    } catch (e) {
-      // Ignore conversion errors
-    }
-  }
-  
-  // 3. Match raw http/https links in the binary stream that are not annotations (plain text URLs)
-  const rawUrlPattern = /(https?:\/\/[^\s()<>{}|\\^~[\]`"';]+)/gi;
-  while ((match = rawUrlPattern.exec(binary)) !== null) {
-    // Clean trailing punctuation or brackets
-    let url = match[1].replace(/[.,;:!?'")\]]+$/, '');
-    links.push(url);
-  }
-  
-  return [...new Set(links)];
 }
 
 /**
@@ -160,7 +161,7 @@ exports.parseResume = async (req, res) => {
           extractedText = pdfData.text;
           
           // Extract hyperlinks directly from binary buffer
-          const links = extractPDFLinks(buffer);
+          const links = await extractPDFLinks(buffer);
           if (links.length > 0) {
             extractedText += "\n\n--- EXTRACTED HYPERLINKS ---\n" + links.join("\n");
             console.log(`Successfully extracted ${links.length} hyperlinks from PDF resume!`);
@@ -212,7 +213,7 @@ exports.parseResume = async (req, res) => {
 
     // AI Parsing with Groq with robust fallback logic
     console.log("Sending text to Groq for parsing...");
-    const systemPrompt = "You are an expert resume parser and portfolio architect. Extract structured information from the provided text and return it as a clean JSON object following this schema: { personalInfo: { name, email, phone, location, bio, socialLinks: [] }, skills: [], experience: [{ title, company, location, duration, description }], education: [{ degree, school, year }], projects: [{ title, description, technologies: [] }] }. ONLY return JSON, no extra text.";
+    const systemPrompt = "You are an expert resume parser and portfolio architect. Extract structured information from the provided text and return it as a clean JSON object following this schema: { personalInfo: { name, email, phone, location, bio, socialLinks: [\"https://github.com/yourusername\", \"https://linkedin.com/in/yourusername\"] }, skills: [], experience: [{ title, company, location, duration, description }], education: [{ degree, school, year }], projects: [{ title, description, technologies: [] }] }. Make sure to extract the full URLs for social links (such as GitHub, LinkedIn, LeetCode) from the resume and put them in the socialLinks array. Do NOT just put platform names. ONLY return JSON, no extra text.";
     
     try {
       const groq = getGroqClient();
@@ -259,6 +260,75 @@ exports.parseResume = async (req, res) => {
 
       try {
         const parsedData = cleanAndParseJSON(content);
+
+        // --- Post-Processing Social Links Auto-Recovery ---
+        // 1. Extract all URLs from extractedText via regex
+        const textUrls = extractedText.match(/(https?:\/\/[^\s"<>()[\]{}|\\^~`']+)/gi) || [];
+        
+        // 2. Also extract PDF links from buffer if PDF
+        let pdfUrls = [];
+        if (mimetype === "application/pdf") {
+          try {
+            pdfUrls = await extractPDFLinks(buffer);
+          } catch (e) {
+            console.warn("[Post-Processor] Error extracting PDF binary links:", e.message);
+          }
+        }
+        
+        // Combine and deduplicate
+        const allExtractedUrls = [...new Set([...textUrls, ...pdfUrls])];
+        console.log(`[Post-Processor] Extracted ${allExtractedUrls.length} absolute URLs from resume file.`);
+
+        // Standardize parsedData structure
+        parsedData.personalInfo = parsedData.personalInfo || {};
+        let socialLinks = parsedData.personalInfo.socialLinks || [];
+        if (!Array.isArray(socialLinks)) {
+          socialLinks = [];
+        }
+
+        // Clean out placeholder names like "GitHub", "LinkedIn", "LeetCode" that aren't real URLs
+        socialLinks = socialLinks.filter(item => {
+          if (!item) return false;
+          const urlStr = (typeof item === 'string' ? item : (item.url || item.link || '')).toString().trim();
+          // Keep if it has URL/path structures
+          return urlStr.includes('.') || urlStr.includes('/') || urlStr.startsWith('http');
+        });
+
+        // Track platforms we have valid URLs for
+        const platformsFound = { github: false, linkedin: false, leetcode: false };
+        socialLinks.forEach(item => {
+          const urlStr = (typeof item === 'string' ? item : (item.url || item.link || '')).toString().toLowerCase();
+          if (urlStr.includes('github.com')) platformsFound.github = true;
+          if (urlStr.includes('linkedin.com')) platformsFound.linkedin = true;
+          if (urlStr.includes('leetcode.com')) platformsFound.leetcode = true;
+        });
+
+        // Scan all extracted URLs to fill in any missing platforms
+        allExtractedUrls.forEach(url => {
+          const urlLower = url.toLowerCase();
+          if (urlLower.includes('github.com') && !platformsFound.github) {
+            socialLinks.push({ platform: 'github', url });
+            platformsFound.github = true;
+            console.log(`[Post-Processor] Auto-recovered GitHub URL: ${url}`);
+          } else if (urlLower.includes('linkedin.com') && !platformsFound.linkedin) {
+            socialLinks.push({ platform: 'linkedin', url });
+            platformsFound.linkedin = true;
+            console.log(`[Post-Processor] Auto-recovered LinkedIn URL: ${url}`);
+          } else if (urlLower.includes('leetcode.com') && !platformsFound.leetcode) {
+            socialLinks.push({ platform: 'leetcode', url });
+            platformsFound.leetcode = true;
+            console.log(`[Post-Processor] Auto-recovered LeetCode URL: ${url}`);
+          }
+        });
+
+        parsedData.personalInfo.socialLinks = socialLinks;
+
+        // Log finalized social links to the console for easy verification
+        console.log("\n=======================================================");
+        console.log("🟢 FINALIZED SOCIAL MEDIA LINKS FROM UPLOADED RESUME:");
+        console.log(JSON.stringify(socialLinks, null, 2));
+        console.log("=======================================================\n");
+
         res.status(200).json({
           success: true,
           data: parsedData,
@@ -310,7 +380,7 @@ exports.generatePortfolioData = async (req, res) => {
       });
     }
 
-    const systemPrompt = "You are an expert resume parser and portfolio architect. Extract structured information from the provided text and return it as a clean JSON object following this schema: { personalInfo: { name, email, phone, location, bio, socialLinks: [] }, skills: [], experience: [{ title, company, location, duration, description }], education: [{ degree, school, year }], projects: [{ title, description, technologies: [] }] }. ONLY return JSON, no extra text.";
+    const systemPrompt = "You are an expert resume parser and portfolio architect. Extract structured information from the provided text and return it as a clean JSON object following this schema: { personalInfo: { name, email, phone, location, bio, socialLinks: [\"https://github.com/yourusername\", \"https://linkedin.com/in/yourusername\"] }, skills: [], experience: [{ title, company, location, duration, description }], education: [{ degree, school, year }], projects: [{ title, description, technologies: [] }] }. Make sure to extract the full URLs for social links (such as GitHub, LinkedIn, LeetCode) from the resume and put them in the socialLinks array. Do NOT just put platform names. ONLY return JSON, no extra text.";
     
     try {
       const groq = getGroqClient();
@@ -448,24 +518,39 @@ exports.initializePortfolio = async (req, res) => {
  */
 async function initializePortfolioBlueprintMode(req, res, { userData, targetRole }) {
   // Normalize user data
-  const hasProfile = userData && userData.personalInfo && Object.keys(userData.personalInfo).length > 0;
+  const hasProfile = userData && (
+    (userData.personalInfo && Object.keys(userData.personalInfo).length > 0) ||
+    (userData.skills && userData.skills.length > 0) ||
+    (userData.experience && userData.experience.length > 0) ||
+    (userData.projects && userData.projects.length > 0) ||
+    (userData.education && userData.education.length > 0)
+  );
+
+  const { normalizeSocialLinks } = require("../utils/urlHelpers");
+  const rawLinks = userData?.personalInfo?.socialLinks || [];
+  const normalizedLinks = normalizeSocialLinks(rawLinks);
+  console.log("\n=======================================================");
+  console.log("⚡ PORTFOLIO INITIALIZER - NORMALIZED SOCIAL LINKS:");
+  console.log(JSON.stringify(normalizedLinks, null, 2));
+  console.log("=======================================================\n");
+
   const normalizedUserData = {
     personalInfo: {
-      name: hasProfile ? userData.personalInfo.name : "Creative Professional",
-      bio: hasProfile ? userData.personalInfo.bio : "Passionate designer and engineer dedicated to crafting premium web experiences.",
-      location: hasProfile ? userData.personalInfo.location : "New York, NY",
-      email: hasProfile ? userData.personalInfo.email : "hello@professional.com",
-      socialLinks: hasProfile ? userData.personalInfo.socialLinks : [],
-      targetRole: targetRole || "",
+      name: (userData && userData.personalInfo && userData.personalInfo.name) ? userData.personalInfo.name : "Creative Professional",
+      bio: (userData && userData.personalInfo && userData.personalInfo.bio) ? userData.personalInfo.bio : "Passionate designer and engineer dedicated to crafting premium web experiences.",
+      location: (userData && userData.personalInfo && userData.personalInfo.location) ? userData.personalInfo.location : "New York, NY",
+      email: (userData && userData.personalInfo && userData.personalInfo.email) ? userData.personalInfo.email : "hello@professional.com",
+      socialLinks: (userData && userData.personalInfo && userData.personalInfo.socialLinks) ? userData.personalInfo.socialLinks : [],
+      targetRole: targetRole || (userData && userData.personalInfo && userData.personalInfo.targetRole) || "",
     },
-    skills: userData?.skills?.length > 0 ? userData.skills : ["React.js", "Tailwind CSS", "UI/UX Engineering"],
-    experience: userData?.experience?.length > 0 ? userData.experience : [
+    skills: hasProfile ? (userData.skills || []) : ["React.js", "Tailwind CSS", "UI/UX Engineering"],
+    experience: hasProfile ? (userData.experience || []) : [
       { title: "Senior Engineer", company: "Acme Corp", duration: "2023 - Present", description: "Led frontend architecture." }
     ],
-    education: userData?.education?.length > 0 ? userData.education : [
+    education: hasProfile ? (userData.education || []) : [
       { degree: "B.S. Computer Science", school: "State University", year: "2022" }
     ],
-    projects: userData?.projects?.length > 0 ? userData.projects : [
+    projects: hasProfile ? (userData.projects || []) : [
       { title: "Portfolio Generator", description: "AI-powered portfolio creation tool.", technologies: ["React", "Node.js"] }
     ],
   };

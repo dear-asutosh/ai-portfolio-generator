@@ -140,6 +140,7 @@ const compileHTML = (userData, githubData, leetcodeData) => {
   const socialLinks = normalizeSocialLinks(personalInfo?.socialLinks);
   const githubUrl = socialLinks.find(l => l.platform === 'github')?.url || '';
   const linkedinUrl = socialLinks.find(l => l.platform === 'linkedin')?.url || '';
+  const leetcodeUrl = socialLinks.find(l => l.platform === 'leetcode')?.url || '';
   const instagramUrl = socialLinks.find(l => l.platform === 'instagram')?.url || '';
 
   // Avatar URL selection (use GitHub profile avatar as fallback)
@@ -264,22 +265,26 @@ const compileHTML = (userData, githubData, leetcodeData) => {
               WhatsApp
             </a>` : ''}
           </div>
-
+          
           <!-- Social Links -->
           <div class="flex items-center gap-5 pt-4 text-zinc-600 hover-icons">
             ${linkedinUrl ? `
-            <a href="${linkedinUrl}" target="_blank" rel="noopener noreferrer" class="transition-all hover:scale-110 hover:text-blue-400">
+            <a href="${linkedinUrl}" target="_blank" rel="noopener noreferrer" class="transition-all hover:scale-110 hover:text-blue-400" title="LinkedIn">
               <svg class="w-6 h-6 fill-current" viewBox="0 0 24 24"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.779-1.75-1.75s.784-1.75 1.75-1.75 1.75.779 1.75 1.75-.784 1.75-1.75 1.75zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
             </a>` : ''}
             ${githubUrl ? `
-            <a href="${githubUrl}" target="_blank" rel="noopener noreferrer" class="transition-all hover:scale-110 hover:text-white">
+            <a href="${githubUrl}" target="_blank" rel="noopener noreferrer" class="transition-all hover:scale-110 hover:text-white" title="GitHub">
               <svg class="w-6 h-6 fill-current" viewBox="0 0 24 24"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
             </a>` : ''}
-            ${instagramUrl ? `
-            <a href="${instagramUrl}" target="_blank" rel="noopener noreferrer" class="transition-all hover:scale-110 hover:text-pink-500">
-              <svg class="w-6 h-6 fill-current" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+            ${leetcodeUrl ? `
+            <a href="${leetcodeUrl}" target="_blank" rel="noopener noreferrer" class="transition-all hover:scale-110 hover:text-amber-500" title="LeetCode">
+              <svg class="w-6 h-6 fill-current" viewBox="0 0 24 24"><path d="M13.483 0a1.374 1.374 0 0 0-.961.414l-9.777 9.778a1.375 1.375 0 0 0 0 1.942l4.8 4.8a1.375 1.375 0 0 0 1.943 0l9.777-9.778a1.375 1.375 0 0 0 0-1.942l-4.8-4.8A1.374 1.374 0 0 0 13.483 0zm.01 2.05l3.86 3.86L8.85 14.41l-3.86-3.86zM4.685 10.74l3.86 3.86-1.582 1.58a1.375 1.375 0 0 1-1.943 0l-1.915-1.9a1.375 1.375 0 0 1 0-1.94l1.58-1.58zM14.6 3.42l3.86 3.86-.96.96-3.86-3.86zm-2.02 2.02l3.86 3.86-.96.96-3.86-3.86z"/></svg>
             </a>` : ''}
-          </div>
+            ${instagramUrl ? `
+            <a href="${instagramUrl}" target="_blank" rel="noopener noreferrer" class="transition-all hover:scale-110 hover:text-pink-500" title="Instagram">
+              <svg class="w-6 h-6 fill-current" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0 3.259-.014 3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+            </a>` : ''}
+          </div></div>
         </div>
 
       </div>
@@ -523,6 +528,90 @@ const compileHTML = (userData, githubData, leetcodeData) => {
       </div>
     </section>
     ` : ''}
+
+    <!-- CONTACT SECTION -->
+    <section id="contact" class="w-full space-y-4 reveal animate-reveal">
+      <h2 class="text-2xl font-bold tracking-tight text-zinc-100">Contact</h2>
+      <div class="rounded-2xl border border-zinc-800 bg-zinc-900/30 p-6 md:p-8 shadow-sm w-full">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+          
+          <!-- Left side: Prompt message -->
+          <div class="space-y-4">
+            <h3 class="text-lg font-bold text-zinc-200">Let's collaborate!</h3>
+            <p class="text-sm text-zinc-400 font-sans font-light leading-relaxed">
+              I am currently seeking new full-time software engineering roles and freelance opportunities. 
+              Feel free to reach out via email, phone, or connect with me on professional networks.
+            </p>
+            <div class="pt-2 flex flex-wrap gap-4">
+              <a href="mailto:${email}" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold bg-zinc-100 hover:bg-zinc-200 text-zinc-950 shadow-md transition-all hover:scale-[1.02] active:scale-[0.98]">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                <span>Get in touch</span>
+              </a>
+              ${phone ? `
+              <a href="https://wa.me/${phone.replace(/[^\d+]/g, '')}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold bg-zinc-900 border border-zinc-800 hover:bg-zinc-850 hover:border-zinc-700 text-zinc-200 shadow-sm transition-all hover:scale-[1.02]">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.724-1.47L0 24zm6.59-4.846c1.6.95 3.188 1.449 4.825 1.451 5.436 0 9.86-4.37 9.864-9.799.002-2.63-1.023-5.101-2.885-6.97C16.59 2.03 14.113.992 11.995.992 6.56.992 2.137 5.362 2.133 10.793c-.001 1.705.452 3.37 1.312 4.848l-.993 3.629 3.715-.974zm13.682-7.391c-.272-.136-1.614-.796-1.863-.887-.249-.09-.431-.136-.613.136-.182.271-.703.887-.862 1.069-.159.182-.318.204-.59.068-.272-.136-1.15-.424-2.19-1.354-.809-.722-1.354-1.616-1.513-1.887-.159-.271-.017-.417.119-.553.123-.122.272-.318.409-.477.136-.159.182-.272.272-.453.09-.182.045-.34-.022-.477-.068-.136-.613-1.477-.839-2.021-.22-.53-.442-.458-.613-.467-.159-.008-.34-.01-.522-.01-.182 0-.477.068-.727.34-.25.272-.953.932-.953 2.27 0 1.338.975 2.63 1.111 2.812.136.182 1.92 2.931 4.65 4.114.65.28 1.157.447 1.554.573.653.208 1.248.179 1.718.109.524-.078 1.614-.658 1.841-1.294.227-.636.227-1.18.159-1.294-.068-.113-.249-.182-.522-.318z"/></svg>
+                WhatsApp
+              </a>` : ''}
+            </div>
+          </div>
+          
+          <!-- Right side: Key-Value listings and Social Links -->
+          <div class="space-y-4">
+            <h3 class="text-sm font-bold uppercase tracking-wider text-zinc-500 font-mono">Direct Channels</h3>
+            <div class="space-y-3 font-mono text-xs">
+              <div class="flex items-center gap-3 text-zinc-300">
+                <span class="text-zinc-600 w-20 uppercase font-bold text-[10px]">Email</span>
+                <a href="mailto:${email}" class="hover:text-cyan-400 transition-colors truncate">${email}</a>
+              </div>
+              ${phone ? `
+              <div class="flex items-center gap-3 text-zinc-300">
+                <span class="text-zinc-600 w-20 uppercase font-bold text-[10px]">Phone</span>
+                <span class="select-all">${phone}</span>
+              </div>` : ''}
+              ${location ? `
+              <div class="flex items-center gap-3 text-zinc-300">
+                <span class="text-zinc-600 w-20 uppercase font-bold text-[10px]">Location</span>
+                <span>${location}</span>
+              </div>` : ''}
+            </div>
+
+            <!-- Professional Profiles -->
+            ${socialLinks.length > 0 ? `
+            <div class="pt-4 border-t border-zinc-900">
+              <h4 class="text-[10px] font-bold uppercase tracking-widest text-zinc-600 font-mono mb-3">Professional Networks</h4>
+              <div class="flex flex-wrap gap-3">
+                ${socialLinks.map(link => {
+                  let platformIcon = '';
+                  let platformColorClass = '';
+                  
+                  if (link.platform === 'github') {
+                    platformIcon = `<svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>`;
+                    platformColorClass = 'hover:text-white hover:border-zinc-700 bg-zinc-900/50';
+                  } else if (link.platform === 'linkedin') {
+                    platformIcon = `<svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.779-1.75-1.75s.784-1.75 1.75-1.75 1.75.779 1.75 1.75-.784 1.75-1.75 1.75zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>`;
+                    platformColorClass = 'hover:text-blue-400 hover:border-blue-500/30 bg-zinc-900/50';
+                  } else if (link.platform === 'leetcode') {
+                    platformIcon = `<svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M13.483 0a1.374 1.374 0 0 0-.961.414l-9.777 9.778a1.375 1.375 0 0 0 0 1.942l4.8 4.8a1.375 1.375 0 0 0 1.943 0l9.777-9.778a1.375 1.375 0 0 0 0-1.942l-4.8-4.8A1.374 1.374 0 0 0 13.483 0zm.01 2.05l3.86 3.86L8.85 14.41l-3.86-3.86zM4.685 10.74l3.86 3.86-1.582 1.58a1.375 1.375 0 0 1-1.943 0l-1.915-1.9a1.375 1.375 0 0 1 0-1.94l1.58-1.58zM14.6 3.42l3.86 3.86-.96.96-3.86-3.86zm-2.02 2.02l3.86 3.86-.96.96-3.86-3.86z"/></svg>`;
+                    platformColorClass = 'hover:text-amber-500 hover:border-amber-500/30 bg-zinc-900/50';
+                  } else {
+                    platformIcon = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>`;
+                    platformColorClass = 'hover:text-cyan-400 hover:border-cyan-500/30 bg-zinc-900/50';
+                  }
+                  
+                  return `
+                  <a href="${link.url}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border border-zinc-800 text-zinc-400 text-xs font-semibold hover:bg-zinc-900 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 ${platformColorClass}">
+                    ${platformIcon}
+                    <span class="capitalize">${link.platform}</span>
+                  </a>
+                  `;
+                }).join('')}
+              </div>
+            </div>` : ''}
+
+          </div>
+        </div>
+      </div>
+    </section>
 
   </main>
 
@@ -947,27 +1036,7 @@ const compileJS = (userData) => {
       });
     });
 
-    // 5. Get in Touch Clipboard Copy & Text Feedback
-    const btnEmail = document.getElementById('btn-email');
-    const btnText = document.getElementById('btn-email-text');
-    const developerEmail = "${email}";
-
-    if (btnEmail && developerEmail) {
-      btnEmail.addEventListener('click', (e) => {
-        // Only trigger copy feedback if there's an email
-        if (navigator.clipboard) {
-          e.preventDefault();
-          navigator.clipboard.writeText(developerEmail);
-          btnText.textContent = "Email Copied!";
-          btnEmail.style.borderColor = "#10b981";
-          
-          setTimeout(() => {
-            btnText.textContent = "Get in touch";
-            btnEmail.style.borderColor = "";
-          }, 2000);
-        }
-      });
-    }
+    // 5. Get in Touch: Native mailto link handles this naturally without override copy action
 
     // 6. Conversational AI Chatbot Widget Logic
     const chatToggle = document.getElementById('chat-toggle');

@@ -215,7 +215,7 @@ const PublicPortfolio = () => {
         title={project.title}
         srcDoc={getCombinedCode()}
         className="w-full h-full border-none m-0 p-0"
-        sandbox="allow-scripts allow-forms"
+        sandbox="allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox"
       />
 
       {/* Floating brand and control badge */}

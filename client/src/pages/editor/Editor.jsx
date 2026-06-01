@@ -61,7 +61,7 @@ const Editor = () => {
   const [showDeployModal, setShowDeployModal] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [isDeploying, setIsDeploying] = useState(false);
-  const [copied, setCopied] = useState(false);
+  const [copiedType, setCopiedType] = useState(null);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -80,10 +80,10 @@ const Editor = () => {
     navigate(routes.home);
   };
 
-  const handleCopyLink = (url) => {
+  const handleCopyLink = (url, type) => {
     navigator.clipboard.writeText(url);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    setCopiedType(type);
+    setTimeout(() => setCopiedType(null), 2000);
   };
 
   const handleDeployLive = async () => {
@@ -895,7 +895,7 @@ const Editor = () => {
                         title="Portfolio Preview"
                         srcDoc={getCombinedCode()}
                         className={`w-full h-full border-none bg-white ${(isResizingSidebar || isResizingEditor) ? 'pointer-events-none' : ''}`}
-                        sandbox="allow-scripts allow-forms"
+                        sandbox="allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox"
                       />
                     ) : deviceMode === 'tablet' ? (
                       /* Tablet Mockup Container */
@@ -907,7 +907,7 @@ const Editor = () => {
                           title="Portfolio Preview"
                           srcDoc={getCombinedCode()}
                           className={`w-full h-full border-none bg-white ${(isResizingSidebar || isResizingEditor) ? 'pointer-events-none' : ''}`}
-                          sandbox="allow-scripts allow-forms"
+                          sandbox="allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox"
                         />
                       </div>
                     ) : (
@@ -925,7 +925,7 @@ const Editor = () => {
                           title="Portfolio Preview"
                           srcDoc={getCombinedCode()}
                           className={`w-full h-full border-none bg-white ${(isResizingSidebar || isResizingEditor) ? 'pointer-events-none' : ''}`}
-                          sandbox="allow-scripts allow-forms"
+                          sandbox="allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox"
                         />
                       </div>
                     )}
@@ -982,11 +982,11 @@ const Editor = () => {
                 <div className="flex items-center justify-between gap-3">
                   <span className="text-cyan-400 text-sm font-mono truncate select-all">{`${window.location.origin}/u/${user?.username}/${project?.slug}`}</span>
                   <button 
-                    onClick={() => handleCopyLink(`${window.location.origin}/u/${user?.username}/${project?.slug}`)}
+                    onClick={() => handleCopyLink(`${window.location.origin}/u/${user?.username}/${project?.slug}`, 'live')}
                     className="p-2 bg-white/5 hover:bg-cyan-500 hover:text-black rounded-lg transition-all flex items-center gap-1.5 text-xs text-white"
                   >
-                    {copied ? <Check size={14} /> : <Copy size={14} />}
-                    {copied ? 'Copied' : 'Copy'}
+                    {copiedType === 'live' ? <Check size={14} /> : <Copy size={14} />}
+                    {copiedType === 'live' ? 'Copied' : 'Copy'}
                   </button>
                 </div>
               </div>
@@ -997,11 +997,11 @@ const Editor = () => {
                 <div className="flex items-center justify-between gap-3">
                   <span className="text-purple-400 text-sm font-mono truncate select-all">{`${window.location.origin}/u/${user?.username}`}</span>
                   <button 
-                    onClick={() => handleCopyLink(`${window.location.origin}/u/${user?.username}`)}
+                    onClick={() => handleCopyLink(`${window.location.origin}/u/${user?.username}`, 'short')}
                     className="p-2 bg-white/5 hover:bg-purple-500 hover:text-black rounded-lg transition-all flex items-center gap-1.5 text-xs text-white"
                   >
-                    {copied ? <Check size={14} /> : <Copy size={14} />}
-                    {copied ? 'Copied' : 'Copy'}
+                    {copiedType === 'short' ? <Check size={14} /> : <Copy size={14} />}
+                    {copiedType === 'short' ? 'Copied' : 'Copy'}
                   </button>
                 </div>
               </div>
@@ -1049,11 +1049,11 @@ const Editor = () => {
               <div className="flex items-center justify-between gap-3">
                 <span className="text-cyan-400 text-sm font-mono truncate select-all">{`${window.location.origin}/u/${user?.username}/${project?.slug}`}</span>
                 <button 
-                  onClick={() => handleCopyLink(`${window.location.origin}/u/${user?.username}/${project?.slug}`)}
+                  onClick={() => handleCopyLink(`${window.location.origin}/u/${user?.username}/${project?.slug}`, 'live')}
                   className="p-2 bg-white/5 hover:bg-cyan-500 hover:text-black rounded-lg transition-all flex items-center gap-1.5 text-xs text-white"
                 >
-                  {copied ? <Check size={14} /> : <Copy size={14} />}
-                  {copied ? 'Copied' : 'Copy'}
+                  {copiedType === 'live' ? <Check size={14} /> : <Copy size={14} />}
+                  {copiedType === 'live' ? 'Copied' : 'Copy'}
                 </button>
               </div>
             </div>
