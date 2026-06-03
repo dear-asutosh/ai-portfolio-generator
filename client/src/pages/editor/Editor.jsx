@@ -29,9 +29,13 @@ import {
   LogOut,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Download, Lock } from 'lucide-react';
 import API from '../../apis/api';
 import Notification from '../../components/common/Notification';
 import { useAuth } from '../../context/AuthContext';
+import { useSubscription } from '../../context/SubscriptionContext';
+import UpgradeModal from '../../components/common/UpgradeModal';
+import PlanBadge from '../../components/common/PlanBadge';
 import routes from '../../routes';
 import fallbackUser from '../../assets/images/fallback-user.png';
 import SectionRegenerator from '../../components/editor/SectionRegenerator';
@@ -54,6 +58,7 @@ const Editor = () => {
   const generationTriggeredRef = useRef(false);
 
   const { user, logout } = useAuth();
+  const { plan, canCreatePortfolio, refreshSubscription } = useSubscription();
   const [deviceMode, setDeviceMode] = useState('desktop'); // 'desktop', 'tablet', 'mobile'
   const [isPreviewCollapsed, setIsPreviewCollapsed] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -62,6 +67,8 @@ const Editor = () => {
   const [showShareModal, setShowShareModal] = useState(false);
   const [isDeploying, setIsDeploying] = useState(false);
   const [copiedType, setCopiedType] = useState(null);
+  const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
+  const [exportingId, setExportingId] = useState(null);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -87,6 +94,10 @@ const Editor = () => {
   };
 
   const handleDeployLive = async () => {
+    if (!canCreatePortfolio && project?.status !== 'Live') {
+      setIsUpgradeModalOpen(true);
+      return;
+    }
     setIsDeploying(true);
     try {
       const res = await API.put(`/projects/${id}`, {
@@ -102,15 +113,60 @@ const Editor = () => {
           type: 'success',
           message: 'Portfolio successfully deployed live!'
         });
+        await refreshSubscription();
       }
     } catch (err) {
       console.error('Error deploying project:', err);
       setNotification({
         type: 'error',
-        message: 'Failed to deploy live. Please try again.'
+        message: err.response?.data?.error || 'Failed to deploy live. Please try again.'
       });
     } finally {
       setIsDeploying(false);
+    }
+  };
+
+  const downloadFile = (content, filename, contentType) => {
+    const blob = new Blob([content], { type: contentType });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleExportCode = async (e, projectId, title) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (plan === 'free') {
+      setIsUpgradeModalOpen(true);
+      return;
+    }
+
+    setExportingId(projectId);
+    try {
+      const res = await API.get(`/projects/${projectId}/export`);
+      if (res.data.success) {
+        const { html, css, js } = res.data.data;
+        const normalizedTitle = title.toLowerCase().replace(/\s+/g, '-');
+        downloadFile(html, `${normalizedTitle}.html`, 'text/html');
+        downloadFile(css, 'styles.css', 'text/css');
+        downloadFile(js, 'script.js', 'text/javascript');
+        setNotification({
+          type: 'success',
+          message: 'Source code files downloaded successfully!'
+        });
+      }
+    } catch (err) {
+      console.error(err);
+      setNotification({
+        type: 'error',
+        message: err.response?.data?.error || 'Failed to export source code.'
+      });
+    } finally {
+      setExportingId(null);
     }
   };
 
@@ -533,6 +589,7 @@ const Editor = () => {
                 <Edit2 size={12} />
               </button>
               <span className="text-[10px] bg-cyan-500/10 text-cyan-400 px-1.5 py-0.5 rounded border border-cyan-500/20">V1.2</span>
+              <PlanBadge plan={plan} size="sm" />
             </span>
             <span className="text-[11px] text-gray-500">Auto-saved at {new Date(project?.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
           </div>
@@ -564,6 +621,24 @@ const Editor = () => {
             className="flex items-center gap-2 px-3 py-1.5 bg-[#1a1a1a] hover:bg-[#222] rounded-md text-sm border border-white/5 transition-colors"
           >
             <Share2 size={16} /> Share
+          </button>
+          <button 
+            disabled={exportingId === id || isGenerating}
+            onClick={(e) => handleExportCode(e, id, project?.title || 'portfolio')}
+            className="flex items-center gap-2 px-3 py-1.5 bg-[#1a1a1a] hover:bg-[#222] rounded-md text-sm border border-white/5 transition-colors disabled:opacity-50"
+            title={plan === 'free' ? 'Upgrade to Pro or Lifetime to export code' : 'Export HTML/CSS/JS source code'}
+          >
+            {exportingId === id ? (
+              <Loader2 className="animate-spin" size={16} />
+            ) : plan === 'free' ? (
+              <>
+                <Lock size={16} className="text-slate-400" /> Export Code
+              </>
+            ) : (
+              <>
+                <Download size={16} /> Export Code
+              </>
+            )}
           </button>
           <button 
             onClick={handleDeployLive}
@@ -1067,6 +1142,13 @@ const Editor = () => {
           </div>
         </div>
       )}
+
+      <UpgradeModal
+        isOpen={isUpgradeModalOpen}
+        onClose={() => setIsUpgradeModalOpen(false)}
+        title="Upgrade to Publish"
+        message="To publish this portfolio live, please upgrade to a paid plan. The Free plan only supports 1 live portfolio."
+      />
     </div>
   );
 };

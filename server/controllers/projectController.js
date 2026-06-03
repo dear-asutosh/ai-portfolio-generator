@@ -1,5 +1,6 @@
 const Project = require('../models/Project');
 const User = require('../models/User');
+const { setHostingExpiration, checkAndArchiveSingle } = require('../services/portfolioLifecycle');
 
 // @desc    Get all projects for logged in user
 // @route   GET /api/projects
@@ -80,10 +81,19 @@ exports.updateProject = async (req, res, next) => {
             return res.status(401).json({ success: false, message: 'Not authorized to update this project' });
         }
 
-        project = await Project.findByIdAndUpdate(req.params.id, req.body, {
-            returnDocument: 'after',
-            runValidators: true
-        });
+        // Check if status is transitioning to Live
+        if (req.body.status === 'Live' && project.status !== 'Live') {
+            setHostingExpiration(project, req.user.plan, req.user.createdAt);
+            
+            // Assign fields manually so that pre-save hook is triggered for saving/updating
+            Object.assign(project, req.body);
+            await project.save();
+        } else {
+            project = await Project.findByIdAndUpdate(req.params.id, req.body, {
+                returnDocument: 'after',
+                runValidators: true
+            });
+        }
 
         res.status(200).json({
             success: true,
@@ -130,6 +140,20 @@ exports.getPublicProject = async (req, res, next) => {
 
         if (!project) {
             return res.status(404).json({ success: false, message: 'Project not found' });
+        }
+
+        // Check if portfolio has expired or subscription lapsed
+        const isArchived = await checkAndArchiveSingle(project);
+
+        if (isArchived || project.status === 'Archived') {
+            const owner = await User.findById(project.user);
+            return res.status(200).json({
+                success: true,
+                archived: true,
+                archivedReason: project.archivedReason || 'expired',
+                ownerUsername: owner ? owner.username : '',
+                message: 'This portfolio hosting has expired.'
+            });
         }
 
         // We only allow viewing if the project is Live
@@ -180,6 +204,19 @@ exports.getPublicProjectByUserAndSlug = async (req, res, next) => {
             return res.status(404).json({ success: false, message: 'No portfolio found' });
         }
 
+        // Check if portfolio has expired or subscription lapsed
+        const isArchived = await checkAndArchiveSingle(project);
+
+        if (isArchived || project.status === 'Archived') {
+            return res.status(200).json({
+                success: true,
+                archived: true,
+                archivedReason: project.archivedReason || 'expired',
+                ownerUsername: user.username,
+                message: 'This portfolio hosting has expired.'
+            });
+        }
+
         // We only allow viewing if the project is Live
         if (project.status !== 'Live') {
             return res.status(403).json({ success: false, message: 'This project is a draft and is not published yet' });
@@ -200,3 +237,34 @@ exports.getPublicProjectByUserAndSlug = async (req, res, next) => {
         res.status(400).json({ success: false, message: err.message });
     }
 };
+
+// @desc    Export portfolio source code
+// @route   GET /api/projects/:id/export
+// @access  Private
+exports.exportProjectCode = async (req, res, next) => {
+    try {
+        const project = await Project.findById(req.params.id);
+
+        if (!project) {
+            return res.status(404).json({ success: false, message: 'Project not found' });
+        }
+
+        // Make sure user owns the project
+        if (project.user.toString() !== req.user.id && req.user.role !== 'admin') {
+            return res.status(401).json({ success: false, message: 'Not authorized to export this project' });
+        }
+
+        res.status(200).json({
+            success: true,
+            data: {
+                html: project.generatedCode.html || '',
+                css: project.generatedCode.css || '',
+                js: project.generatedCode.js || '',
+                title: project.title
+            }
+        });
+    } catch (err) {
+        res.status(400).json({ success: false, message: err.message });
+    }
+};
+

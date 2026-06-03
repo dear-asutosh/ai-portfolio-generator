@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { Eye, Edit2, Loader2, AlertTriangle, ArrowLeft, Sparkles, ChevronUp, ChevronDown } from 'lucide-react';
 import API from '../../apis/api';
 import { useAuth } from '../../context/AuthContext';
+import ExpiredPortfolioPage from './ExpiredPortfolioPage';
 
 const PublicPortfolio = () => {
   const { username, slug, id } = useParams();
@@ -27,7 +28,11 @@ const PublicPortfolio = () => {
 
         const res = await API.get(endpoint);
         if (res.data.success) {
-          setProject(res.data.data);
+          if (res.data.archived) {
+            setProject({ archived: true, ownerUsername: res.data.ownerUsername, archivedReason: res.data.archivedReason });
+          } else {
+            setProject(res.data.data);
+          }
         }
       } catch (err) {
         console.error('Error fetching public portfolio:', err);
@@ -169,6 +174,10 @@ const PublicPortfolio = () => {
         </div>
       </div>
     );
+  }
+
+  if (project && project.archived) {
+    return <ExpiredPortfolioPage ownerUsername={project.ownerUsername} />;
   }
 
   if (error || !project) {

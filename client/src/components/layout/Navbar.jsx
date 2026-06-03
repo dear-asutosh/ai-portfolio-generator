@@ -10,11 +10,15 @@ import {
   LayoutDashboard, 
   Settings, 
   LogOut, 
-  ChevronDown 
+  ChevronDown,
+  ShieldCheck
 } from 'lucide-react';
+import { useSubscription } from '../../context/SubscriptionContext';
+import PlanBadge from '../common/PlanBadge';
 
 export default function Navbar() {
   const { user, logout } = useAuth();
+  const { plan } = useSubscription();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
@@ -101,12 +105,25 @@ export default function Navbar() {
                     transition={{ duration: 0.2, ease: "easeOut" }}
                     className="absolute right-0 mt-2 w-56 bg-[#0f0f0f] border border-white/10 rounded-xl shadow-2xl overflow-hidden py-1 z-[60]"
                   >
-                    <div className="px-4 py-3 border-b border-white/5">
+                    <div className="px-4 py-3 border-b border-white/5 flex flex-col gap-1.5">
                       <p className="text-sm font-semibold text-white truncate">{user.name}</p>
-                      <p className="text-xs text-gray-500 truncate">{user.email}</p>
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-[11px] text-gray-500 truncate max-w-[100px]">{user.email}</span>
+                        <PlanBadge plan={plan} size="sm" />
+                      </div>
                     </div>
 
                     <div className="p-1">
+                      {user?.role === 'admin' && (
+                        <Link 
+                          to={routes.admin} 
+                          onClick={() => setIsDropdownOpen(false)}
+                          className="flex items-center gap-3 px-3 py-2 text-sm text-cyan-400 hover:text-white hover:bg-cyan-500/10 rounded-lg transition-colors border border-cyan-500/10 mb-1"
+                        >
+                          <ShieldCheck className="w-4 h-4 text-cyan-400" />
+                          Admin Panel
+                        </Link>
+                      )}
                       <Link 
                         to={routes.dashboard.replace(':username', `@${user?.username || 'user'}`)} 
                         onClick={() => setIsDropdownOpen(false)}

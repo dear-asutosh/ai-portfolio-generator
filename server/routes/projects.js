@@ -6,7 +6,8 @@ const {
     updateProject,
     deleteProject,
     getPublicProject,
-    getPublicProjectByUserAndSlug
+    getPublicProjectByUserAndSlug,
+    exportProjectCode
 } = require('../controllers/projectController');
 
 const router = express.Router();
@@ -17,6 +18,7 @@ router.get('/public/user/:username', getPublicProjectByUserAndSlug);
 router.get('/public/user/:username/:slug', getPublicProjectByUserAndSlug);
 
 const { protect } = require('../middleware/authMiddleware');
+const { checkPortfolioLimit, checkTotalPortfolioLimit, checkExportAccess } = require('../middleware/planMiddleware');
 const Project = require('../models/Project');
 
 // All remaining routes are protected
@@ -25,13 +27,15 @@ router.use(protect);
 router
     .route('/')
     .get(getProjects)
-    .post(createProject);
+    .post(checkTotalPortfolioLimit, createProject);
 
 router
     .route('/:id')
     .get(getProject)
-    .put(updateProject)
+    .put(checkPortfolioLimit, updateProject)
     .delete(deleteProject);
+
+router.get('/:id/export', checkExportAccess, exportProjectCode);
 
 /**
  * GET /api/projects/:id/phase

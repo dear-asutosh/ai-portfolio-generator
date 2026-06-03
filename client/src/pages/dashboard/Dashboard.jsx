@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useParams, useNavigate } from 'react-router-dom';
 import routes from '../../routes';
-import { LayoutGrid, Plus, ExternalLink, Clock, Loader2, Trash2, Edit2 } from 'lucide-react';
+import { LayoutGrid, Plus, ExternalLink, Clock, Loader2, Trash2, Edit2, Download, Lock, RefreshCw } from 'lucide-react';
 import Notification from '../../components/common/Notification';
 import { useAuth } from '../../context/AuthContext';
+import { useSubscription } from '../../context/SubscriptionContext';
+import PlanBadge from '../../components/common/PlanBadge';
+import UpgradeModal from '../../components/common/UpgradeModal';
 import API from '../../apis/api';
 
 const Dashboard = () => {
@@ -11,11 +14,14 @@ const Dashboard = () => {
   const { user } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+  const { plan, limits, usage, canCreatePortfolio, refreshSubscription } = useSubscription();
   
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [notification, setNotification] = useState(null);
-  const [isCreating, setIsCreating] = useState(false);
+  const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
+  const [reactivatingId, setReactivatingId] = useState(null);
+  const [exportingId, setExportingId] = useState(null);
 
   // Normalize username (handle @ prefix)
   const cleanUsername = username?.startsWith('@') ? username.slice(1) : username;
@@ -57,9 +63,14 @@ const Dashboard = () => {
     };
 
     fetchProjects();
-  }, []);
+    refreshSubscription();
+  }, [cleanUsername, user, isOwner]);
 
   const handleCreateProject = () => {
+    if (!canCreatePortfolio) {
+      setIsUpgradeModalOpen(true);
+      return;
+    }
     navigate(routes.project.new);
   };
 
@@ -76,6 +87,7 @@ const Dashboard = () => {
         type: 'success',
         message: 'Project deleted successfully.'
       });
+      refreshSubscription();
     } catch (err) {
       setNotification({
         type: 'error',
@@ -108,9 +120,92 @@ const Dashboard = () => {
     }
   };
 
-  // If the username in URL doesn't match logged in user, maybe show a "View Only" mode later
-  // For now, let's just show their own dashboard if they are authorized
-  
+  const handleReactivateProject = async (e, id) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!canCreatePortfolio) {
+      setIsUpgradeModalOpen(true);
+      return;
+    }
+
+    setReactivatingId(id);
+    try {
+      const res = await API.put(`/projects/${id}`, { status: 'Live' });
+      if (res.data.success) {
+        setProjects(projects.map(p => p._id === id ? { ...p, status: 'Live', archivedReason: null, archivedAt: null } : p));
+        setNotification({
+          type: 'success',
+          message: 'Portfolio reactivated successfully!'
+        });
+        await refreshSubscription();
+      }
+    } catch (err) {
+      setNotification({
+        type: 'error',
+        message: err.response?.data?.error || 'Failed to reactivate portfolio.'
+      });
+    } finally {
+      setReactivatingId(null);
+    }
+  };
+
+  const downloadFile = (content, filename, contentType) => {
+    const blob = new Blob([content], { type: contentType });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleExportCode = async (e, projectId, title) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (plan === 'free') {
+      setIsUpgradeModalOpen(true);
+      return;
+    }
+
+    setExportingId(projectId);
+    try {
+      const res = await API.get(`/projects/${projectId}/export`);
+      if (res.data.success) {
+        const { html, css, js } = res.data.data;
+        const normalizedTitle = title.toLowerCase().replace(/\s+/g, '-');
+        downloadFile(html, `${normalizedTitle}.html`, 'text/html');
+        downloadFile(css, 'styles.css', 'text/css');
+        downloadFile(js, 'script.js', 'text/javascript');
+        setNotification({
+          type: 'success',
+          message: 'Source code files downloaded successfully!'
+        });
+      }
+    } catch (err) {
+      console.error(err);
+      setNotification({
+        type: 'error',
+        message: err.response?.data?.error || 'Failed to export source code.'
+      });
+    } finally {
+      setExportingId(false);
+    }
+  };
+
+  const getRemainingDays = (expiryDate) => {
+    if (!expiryDate) return null;
+    const diffTime = new Date(expiryDate) - new Date();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays > 0 ? diffDays : 0;
+  };
+
+  // Compute total/max for progress bar
+  const totalCount = usage?.totalPortfolios || 0;
+  const maxAllowed = limits?.maxPortfolios || 1;
+  const percentage = maxAllowed === Infinity ? 0 : Math.min(100, (totalCount / maxAllowed) * 100);
+
   return (
     <div className="pt-24 pb-12 px-6 max-w-7xl mx-auto min-h-screen bg-[#0a0a0a] text-white">
       {notification && (
@@ -120,6 +215,65 @@ const Dashboard = () => {
           onClose={() => setNotification(null)} 
           className="mb-8"
         />
+      )}
+
+      {/* Subscription / Plan Banner */}
+      {isOwner && (
+        <div className="mb-8 p-5 rounded-2xl border border-white/5 bg-white/5 backdrop-blur-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4 animate-in fade-in duration-500">
+          <div className="flex-1">
+            <div className="flex items-center gap-3 mb-2">
+              <span className="text-sm font-semibold text-slate-300">Your Current Plan:</span>
+              <PlanBadge plan={plan} size="sm" />
+            </div>
+            
+            {plan === 'free' && (
+              <p className="text-slate-400 text-xs">
+                Free plan is limited to 1 portfolio in total, hosted for 7 days. Upgrade to Pro or Lifetime to build more and export source code!
+              </p>
+            )}
+            {plan === 'pro' && (
+              <p className="text-slate-400 text-xs">
+                Pro subscription allows up to 5 portfolios in total, with hosting active while subscribed.
+              </p>
+            )}
+            {plan === 'lifetime' && (
+              <p className="text-slate-400 text-xs">
+                Lifetime Plan grants you unlimited portfolios, permanent hosting, and source code export forever!
+              </p>
+            )}
+
+            {/* Progress bar */}
+            {plan !== 'lifetime' && maxAllowed !== Infinity && (
+              <div className="mt-4 max-w-md">
+                <div className="flex justify-between text-[10px] font-mono uppercase text-slate-500 mb-1">
+                  <span>Usage Limits</span>
+                  <span>{totalCount} / {maxAllowed} Portfolios Created</span>
+                </div>
+                <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full transition-all duration-500" 
+                    style={{ width: `${percentage}%` }}
+                  />
+                </div>
+              </div>
+            )}
+
+            {plan === 'lifetime' && (
+              <div className="mt-3 max-w-md flex items-center gap-2 text-xs text-amber-400 font-semibold bg-amber-500/10 border border-amber-500/20 px-3.5 py-2 rounded-xl">
+                <span>✨ Enjoy your Lifetime plan with absolutely no constraints!</span>
+              </div>
+            )}
+          </div>
+
+          {plan !== 'lifetime' && (
+            <button
+              onClick={() => setIsUpgradeModalOpen(true)}
+              className="px-4 py-2 rounded-xl text-xs font-semibold bg-gradient-to-r from-cyan-500 to-blue-500 text-black hover:from-cyan-400 hover:to-blue-400 shadow-[0_0_15px_rgba(6,182,212,0.15)] shrink-0 transition"
+            >
+              Upgrade Plan
+            </button>
+          )}
+        </div>
       )}
 
       <div className="mb-10">
@@ -173,82 +327,147 @@ const Dashboard = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {projects.map((project) => (
-              <div key={project._id} className="group relative">
-                <Link
-                  to={routes.project.index.replace(':id', project._id)}
-                  className="bg-[#111] border border-white/5 rounded-xl overflow-hidden hover:border-cyan-500/50 transition-all cursor-pointer block"
-                >
-                  <div className="aspect-video bg-[#1a1a1a] flex items-center justify-center border-b border-white/5 relative">
-                    {project.thumbnail ? (
-                      <img src={project.thumbnail} alt={project.title} className="w-full h-full object-cover" />
-                    ) : (
-                      <LayoutGrid className="text-white/10 w-12 h-12 group-hover:text-cyan-500/20 transition-colors" />
-                    )}
-                    
-                    {/* Actions overlay */}
-                    <div className="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button 
-                        onClick={(e) => handleRenameProject(e, project._id, project.title)}
-                        className="p-2 bg-black/60 hover:bg-cyan-500 text-white rounded-lg transition-colors"
-                        title="Rename Project"
-                      >
-                        <Edit2 size={16} />
-                      </button>
-                      <button 
-                        onClick={(e) => handleDeleteProject(e, project._id)}
-                        className="p-2 bg-black/60 hover:bg-red-500 text-white rounded-lg transition-colors"
-                        title="Delete Project"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
-                  </div>
-                  
-                  <div className="p-5">
-                    <div className="flex justify-between items-start mb-3">
-                      <h3 className="font-bold text-lg group-hover:text-cyan-400 transition-colors truncate pr-2">
-                        {project.title}
-                      </h3>
-                      <span className={`text-[10px] uppercase tracking-widest px-2 py-0.5 rounded-full border shrink-0 ${
-                        project.status === 'Live' ? 'border-green-500/50 text-green-400' : 'border-yellow-500/50 text-yellow-400'
-                      }`}>
-                        {project.status}
-                      </span>
-                    </div>
-                    
-                    <div className="flex items-center justify-between text-sm text-gray-500">
-                      <div className="flex items-center gap-1">
-                        <Clock size={14} />
-                        {new Date(project.updatedAt).toLocaleDateString(undefined, { 
-                          month: 'short', 
-                          day: 'numeric' 
-                        })}
-                      </div>
-                      {project.status === 'Live' ? (
-                        <a 
-                          href={`/u/${user?.username}/${project.slug}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          onClick={(e) => e.stopPropagation()}
-                          className="flex items-center gap-1 hover:text-cyan-400 text-cyan-500 font-bold transition-colors"
-                        >
-                          <ExternalLink size={14} />
-                          Live Site
-                        </a>
-                      ) : (
-                        <div className="flex items-center gap-1 text-yellow-500/80 font-semibold text-xs">
-                          Draft
+            {projects.map((project) => {
+              const remainingDays = getRemainingDays(project.hostingExpiresAt);
+              return (
+                <div key={project._id} className="group relative">
+                  <div className="bg-[#111] border border-white/5 rounded-xl overflow-hidden hover:border-cyan-500/50 transition-all cursor-pointer block">
+                    <Link to={routes.project.index.replace(':id', project._id)}>
+                      <div className="aspect-video bg-[#1a1a1a] flex items-center justify-center border-b border-white/5 relative">
+                        {project.thumbnail ? (
+                          <img src={project.thumbnail} alt={project.title} className="w-full h-full object-cover" />
+                        ) : (
+                          <LayoutGrid className="text-white/10 w-12 h-12 group-hover:text-cyan-500/20 transition-colors" />
+                        )}
+                        
+                        {/* Actions overlay */}
+                        <div className="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button 
+                            onClick={(e) => handleRenameProject(e, project._id, project.title)}
+                            className="p-2 bg-black/60 hover:bg-cyan-500 text-white rounded-lg transition-colors"
+                            title="Rename Project"
+                          >
+                            <Edit2 size={16} />
+                          </button>
+                          <button 
+                            onClick={(e) => handleDeleteProject(e, project._id)}
+                            className="p-2 bg-black/60 hover:bg-red-500 text-white rounded-lg transition-colors"
+                            title="Delete Project"
+                          >
+                            <Trash2 size={16} />
+                          </button>
                         </div>
-                      )}
+
+                        {/* Export Code overlay (for Live portfolios) */}
+                        {project.status === 'Live' && (
+                          <div className="absolute bottom-3 left-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button
+                              disabled={exportingId === project._id}
+                              onClick={(e) => handleExportCode(e, project._id, project.title)}
+                              className="flex items-center gap-1.5 px-3 py-1.5 bg-black/75 hover:bg-cyan-500 text-white hover:text-black text-xs font-mono rounded-lg transition-colors border border-white/10 font-bold"
+                              title={plan === 'free' ? 'Upgrade to export source code' : 'Export Source Code'}
+                            >
+                              {exportingId === project._id ? (
+                                <Loader2 size={12} className="animate-spin" />
+                              ) : plan === 'free' ? (
+                                <>
+                                  <Lock size={12} className="text-slate-400" /> Code Export
+                                </>
+                              ) : (
+                                <>
+                                  <Download size={12} /> Export Code
+                                </>
+                              )}
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </Link>
+                    
+                    <div className="p-5">
+                      <div className="flex justify-between items-start mb-3">
+                        <Link to={routes.project.index.replace(':id', project._id)} className="flex-1 min-w-0 pr-2">
+                          <h3 className="font-bold text-lg group-hover:text-cyan-400 transition-colors truncate">
+                            {project.title}
+                          </h3>
+                        </Link>
+                        <span className={`text-[10px] uppercase tracking-widest px-2 py-0.5 rounded-full border shrink-0 ${
+                          project.status === 'Live' 
+                            ? 'border-green-500/50 text-green-400' 
+                            : project.status === 'Archived'
+                              ? 'border-red-500/50 text-red-400 bg-red-950/20'
+                              : 'border-yellow-500/50 text-yellow-400'
+                        }`}>
+                          {project.status}
+                        </span>
+                      </div>
+                      
+                      <div className="flex items-center justify-between text-sm text-gray-500">
+                        <div className="flex items-center gap-1">
+                          <Clock size={14} />
+                          {new Date(project.updatedAt).toLocaleDateString(undefined, { 
+                            month: 'short', 
+                            day: 'numeric' 
+                          })}
+                        </div>
+                        
+                        {project.status === 'Live' && (
+                          <div className="flex flex-col items-end gap-1 shrink-0">
+                            <a 
+                              href={`/u/${user?.username}/${project.slug}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-1 hover:text-cyan-400 text-cyan-500 font-bold transition-colors"
+                            >
+                              <ExternalLink size={14} />
+                              Live Site
+                            </a>
+                            {remainingDays !== null && (
+                              <span className={`text-[10px] font-semibold font-mono ${remainingDays <= 2 ? 'text-red-400 animate-pulse' : 'text-slate-500'}`}>
+                                Expires in {remainingDays} day{remainingDays !== 1 && 's'}
+                              </span>
+                            )}
+                          </div>
+                        )}
+
+                        {project.status === 'Archived' && (
+                          <button
+                            disabled={reactivatingId === project._id}
+                            onClick={(e) => handleReactivateProject(e, project._id)}
+                            className="flex items-center gap-1 px-2.5 py-1 bg-cyan-500/10 border border-cyan-500/20 hover:bg-cyan-500 hover:text-black font-semibold text-xs text-cyan-400 rounded-lg transition-all"
+                          >
+                            {reactivatingId === project._id ? (
+                              <Loader2 className="animate-spin" size={12} />
+                            ) : (
+                              <>
+                                <RefreshCw size={12} /> Reactivate
+                              </>
+                            )}
+                          </button>
+                        )}
+
+                        {project.status === 'Draft' && (
+                          <div className="flex items-center gap-1 text-yellow-500/80 font-semibold text-xs">
+                            Draft
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </Link>
-              </div>
-            ))}
+                </div>
+              );
+            })}
           </div>
         )}
       </section>
+
+      {/* Upgrade Modal Dialog */}
+      <UpgradeModal 
+        isOpen={isUpgradeModalOpen} 
+        onClose={() => setIsUpgradeModalOpen(false)}
+        title="Upgrade Your Plan"
+        message="To build more active portfolios, keep hosting permanently, and unlock full source code export, choose one of our paid plans below."
+      />
     </div>
   );
 };

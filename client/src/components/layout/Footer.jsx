@@ -1,4 +1,6 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
+import routes from '../../routes';
 import logo from '../../assets/images/logo.png';
 
 export default function Footer() {
@@ -24,9 +26,10 @@ export default function Footer() {
           {/* Col 2 */}
           <div className="flex flex-col gap-3">
             <h4 className="font-mono text-xs font-bold text-white mb-2 uppercase tracking-wider">Product</h4>
-            {['Features', 'How It Works', 'Pricing', 'Changelog'].map(link => (
-              <a key={link} href="#" className="font-sans text-sm text-muted hover:text-white transition-colors">{link}</a>
-            ))}
+            <Link to={routes.features} className="font-sans text-sm text-muted hover:text-white transition-colors">Features</Link>
+            <Link to={routes.howItWorks} className="font-sans text-sm text-muted hover:text-white transition-colors">How It Works</Link>
+            <Link to={routes.pricing} className="font-sans text-sm text-muted hover:text-white transition-colors">Pricing</Link>
+            <a href="#" className="font-sans text-sm text-muted hover:text-white transition-colors">Changelog</a>
           </div>
 
           {/* Col 3 */}

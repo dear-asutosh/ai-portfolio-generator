@@ -16,6 +16,10 @@ const routes = {
   publicPortfolioById: "/portfolio/:id",
   features: "/features",
   howItWorks: "/how-it-works",
+  pricing: "/pricing",
+  checkoutTest: "/checkout-test",
+  admin: "/admin",
+  adminUsers: "/admin/users",
   notFound: "*",
 };
 
