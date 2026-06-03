@@ -1,10 +1,7 @@
 const getGroqClient = require("../config/groq");
 const pdf = require("pdf-parse");
-const { generateBlueprintInternal } = require("./blueprintController");
 const { runCodeGenPipeline } = require("./codeGenPipeline");
 const { assemblePortfolio, spliceSectionHtml } = require("./assemblePortfolio");
-const { validatePortfolioBlueprint } = require("./blueprintValidator");
-const { buildCacheKey, cacheGet, cacheSet, cacheDelete } = require("../services/generationCache");
 const { callOpenRouter, selectModelsForEditType } = require("../config/openrouter");
 
 const mammoth = require("mammoth");
@@ -77,6 +74,29 @@ const cleanAndParseJSON = (str) => {
     }
   }
 };
+
+const cleanSkills = (skills) => {
+  if (!Array.isArray(skills)) return [];
+  const cleaned = [];
+  skills.forEach(skill => {
+    if (typeof skill !== 'string') return;
+    let content = skill;
+    if (skill.includes(':')) {
+      content = skill.split(':').slice(1).join(':');
+    }
+    if (content.includes(',')) {
+      content.split(',').forEach(item => {
+        const trimmed = item.trim();
+        if (trimmed && !cleaned.includes(trimmed)) cleaned.push(trimmed);
+      });
+    } else {
+      const trimmed = content.trim();
+      if (trimmed && !cleaned.includes(trimmed)) cleaned.push(trimmed);
+    }
+  });
+  return cleaned;
+};
+
 
 /**
  * Helper to extract all hyperlinks and URIs directly from the binary buffer of a PDF.
@@ -224,7 +244,7 @@ exports.parseResume = async (req, res) => {
 
     // AI Parsing with Groq with robust fallback logic
     console.log("Sending text to Groq for parsing...");
-    const systemPrompt = "You are an expert resume parser and portfolio architect. Extract structured information from the provided text and return it as a clean JSON object following this schema: { personalInfo: { name, email, phone, location, bio, socialLinks: [\"https://github.com/yourusername\", \"https://linkedin.com/in/yourusername\"] }, skills: [], experience: [{ title, company, location, duration, description }], education: [{ degree, school, year }], projects: [{ title, description, technologies: [] }] }. Make sure to extract the full URLs for social links (such as GitHub, LinkedIn, LeetCode) from the resume and put them in the socialLinks array. Do NOT just put platform names. ONLY return JSON, no extra text.";
+    const systemPrompt = "You are an expert resume parser and portfolio architect. Extract structured information from the provided text and return it as a clean JSON object following this schema: { personalInfo: { name, email, phone, location, bio, socialLinks: [\"https://github.com/yourusername\", \"https://linkedin.com/in/yourusername\"] }, skills: [], experience: [{ title, company, location, duration, description }], education: [{ degree, school, year }], projects: [{ title, description, technologies: [] }] }. Make sure to extract the full URLs for social links (such as GitHub, LinkedIn, LeetCode) from the resume and put them in the socialLinks array. Do NOT just put platform names. The skills array MUST be a flat list of individual skill names (e.g. [\"React\", \"TypeScript\", \"Python\"]), NOT category-prefixed strings or grouped/comma-separated strings (like [\"Frontend: HTML, CSS\"]). ONLY return JSON, no extra text.";
     
     try {
       const groq = getGroqClient();
@@ -359,6 +379,11 @@ exports.parseResume = async (req, res) => {
 
         parsedData.personalInfo.socialLinks = socialLinks;
 
+        // Sanitize and flatten skills list
+        if (parsedData.skills) {
+          parsedData.skills = cleanSkills(parsedData.skills);
+        }
+
         // Log finalized social links to the console for easy verification
         console.log("\n=======================================================");
         console.log("🟢 FINALIZED SOCIAL MEDIA LINKS FROM UPLOADED RESUME:");
@@ -416,7 +441,7 @@ exports.generatePortfolioData = async (req, res) => {
       });
     }
 
-    const systemPrompt = "You are an expert resume parser and portfolio architect. Extract structured information from the provided text and return it as a clean JSON object following this schema: { personalInfo: { name, email, phone, location, bio, socialLinks: [\"https://github.com/yourusername\", \"https://linkedin.com/in/yourusername\"] }, skills: [], experience: [{ title, company, location, duration, description }], education: [{ degree, school, year }], projects: [{ title, description, technologies: [] }] }. Make sure to extract the full URLs for social links (such as GitHub, LinkedIn, LeetCode) from the resume and put them in the socialLinks array. Do NOT just put platform names. ONLY return JSON, no extra text.";
+    const systemPrompt = "You are an expert resume parser and portfolio architect. Extract structured information from the provided text and return it as a clean JSON object following this schema: { personalInfo: { name, email, phone, location, bio, socialLinks: [\"https://github.com/yourusername\", \"https://linkedin.com/in/yourusername\"] }, skills: [], experience: [{ title, company, location, duration, description }], education: [{ degree, school, year }], projects: [{ title, description, technologies: [] }] }. Make sure to extract the full URLs for social links (such as GitHub, LinkedIn, LeetCode) from the resume and put them in the socialLinks array. Do NOT just put platform names. The skills array MUST be a flat list of individual skill names (e.g. [\"React\", \"TypeScript\", \"Python\"]), NOT category-prefixed strings or grouped/comma-separated strings (like [\"Frontend: HTML, CSS\"]). ONLY return JSON, no extra text.";
     
     try {
       const groq = getGroqClient();
@@ -458,6 +483,11 @@ exports.generatePortfolioData = async (req, res) => {
       }
 
       const parsedData = cleanAndParseJSON(chatCompletion.choices[0].message.content);
+
+      // Sanitize and flatten skills list
+      if (parsedData && parsedData.skills) {
+        parsedData.skills = cleanSkills(parsedData.skills);
+      }
 
       res.status(200).json({
         success: true,
@@ -550,7 +580,7 @@ exports.initializePortfolio = async (req, res) => {
 // ─── Blueprint-Guided Portfolio Initialization ──────────────────────────────
 
 /**
- * Blueprint-first portfolio generation pipeline.
+ * Programmatic portfolio generation pipeline (DRY & KISS optimized).
  */
 async function initializePortfolioBlueprintMode(req, res, { userData, targetRole }) {
   // Normalize user data
@@ -561,9 +591,6 @@ async function initializePortfolioBlueprintMode(req, res, { userData, targetRole
     (userData.projects && userData.projects.length > 0) ||
     (userData.education && userData.education.length > 0)
   );
-
-
-
 
   const normalizedUserData = {
     personalInfo: {
@@ -599,72 +626,37 @@ async function initializePortfolioBlueprintMode(req, res, { userData, targetRole
     }
   };
 
-  const cacheKey = buildCacheKey(normalizedUserData);
-  const cached = cacheGet(cacheKey);
-  if (cached.hit) {
-    console.log(`[Blueprint Mode] Cache HIT — skipping pipeline.`);
-
-    // Save cached result to project
-    if (projectId) {
-      try {
-        await Project.findByIdAndUpdate(projectId, {
-          blueprint: cached.value.blueprint,
-          generatedCode: {
-            html: cached.value.html,
-            css: cached.value.customCss,
-            js: cached.value.js,
-          },
-          generationPhase: 'done',
-        });
-      } catch (e) {
-        console.warn(`[Blueprint Mode] Failed to save cached result: ${e.message}`);
-      }
+  // Create default static blueprint
+  const blueprint = {
+    portfolioTone: "professional",
+    heroSection: {
+      headline: "Building things that matter.",
+      subheadline: "Developer, problem solver, and lifelong learner.",
+      ctaText: "See My Work",
+      heroStyle: "centered"
+    },
+    visualPersonalization: {
+      animationIntensity: "subtle",
+      typographyPersonality: "bold-modern",
+      spacingStyle: "balanced",
+      ctaStyle: "gradient",
+      cardDensity: "balanced",
+      projectPresentation: "bento-grid"
+    },
+    themeTweaks: {
+      primaryAccent: "cyan-400",
+      secondaryAccent: "emerald-400",
+      highlightStyle: "subtle-glow"
     }
+  };
 
-    return res.status(200).json({
-      success: true,
-      data: {
-        html: cached.value.html,
-        css: cached.value.customCss,
-        js: cached.value.js,
-        fullPreviewHtml: cached.value.fullPreviewHtml,
-      },
-      blueprint: cached.value.blueprint,
-      meta: {
-        pipeline: "3-layer-hybrid",
-        blueprintModel: cached.value.blueprintModel,
-        cacheHit: true,
-      },
-    });
-  }
-
-  // ── Step 1: Generate Blueprint ──────────────────────────────────────────
-  let blueprint, blueprintModel;
-
-  try {
-    await setPhase('blueprint');
-    console.log(`[Blueprint Mode] Step 1 — generating blueprint...`);
-    const result = await generateBlueprintInternal(normalizedUserData);
-    blueprintModel = result.model;
-
-    // ── Zod Validation ──────────────────────────────────────────────────
-    const { blueprint: validatedBlueprint, valid, errors } = validatePortfolioBlueprint(result.blueprint);
-    blueprint = validatedBlueprint;
-    if (!valid) {
-      console.warn(`[Blueprint Mode] Blueprint validation issues (using defaults for ${errors.length} field(s)).`);
-    }
-    console.log(`[Blueprint Mode] Blueprint ready (via ${blueprintModel}, valid: ${valid}).`);
-  } catch (blueprintError) {
-    console.error(`[Blueprint Mode] Blueprint generation failed: ${blueprintError.message}.`);
-    await setPhase('error');
-    return res.status(500).json({ success: false, message: "Blueprint generation failed.", error: blueprintError.message });
-  }
-
-  // ── Step 2: 3-Layer Code Generation Pipeline ───────────────────────────
   let rawHtml, rawCss, rawJs;
 
   try {
-    await setPhase('design-interactions');
+    // Stage updates occur immediately because compilation is deterministic & takes ~40ms
+    await setPhase('blueprint');
+    await setPhase('html'); // using valid mongoose schema enums
+    
     console.log(`[Blueprint Mode] Instantly compiling template assets for project ${projectId || 'temp'}...`);
     const compiledCode = await runCodeGenPipeline(blueprint, normalizedUserData);
     rawHtml = compiledCode.html;
@@ -677,25 +669,16 @@ async function initializePortfolioBlueprintMode(req, res, { userData, targetRole
         'generatedCode.css': rawCss,
         'generatedCode.js': rawJs
       });
-      console.log(`[Progressive Preview] HTML, CSS and JS saved intermediate for project ${projectId}`);
     }
   } catch (pipelineError) {
-    console.error(`[Blueprint Mode] 3-layer pipeline failed: ${pipelineError.message}.`);
+    console.error(`[Blueprint Mode] Compilation pipeline failed: ${pipelineError.message}.`);
     await setPhase('error');
     return res.status(500).json({ success: false, message: "Generation pipeline failed.", error: pipelineError.message });
   }
 
-  // ── Step 3: Assembly ────────────────────────────────────────────────────
+  // Assemble portfolio
   await setPhase('assembling');
   const assembled = assemblePortfolio({ html: rawHtml, customCss: rawCss, js: rawJs });
-
-  // ── Save to DB + Cache ──────────────────────────────────────────────────
-  const cachePayload = {
-    ...assembled,
-    blueprint,
-    blueprintModel,
-  };
-  cacheSet(cacheKey, cachePayload);
 
   if (projectId) {
     try {
@@ -724,8 +707,8 @@ async function initializePortfolioBlueprintMode(req, res, { userData, targetRole
     },
     blueprint,
     meta: {
-      pipeline: "3-layer-hybrid",
-      blueprintModel,
+      pipeline: "instant-compiler-v1",
+      blueprintModel: "static-default",
       cacheHit: false,
       assemblyMeta: assembled.meta,
     },
@@ -976,8 +959,6 @@ exports.regenerateSection = async (req, res) => {
         return res.status(404).json({ success: false, message: "Project not found." });
       }
 
-      const { DESIGN_SYSTEM_CAPABILITIES } = require("./blueprintController");
-
       // ── 1. Get existing blueprint + apply mutations ──────────────────────
       // Use existing blueprint or empty object. validation will fill defaults if fields are missing.
       let blueprint = project.blueprint && Object.keys(project.blueprint).length > 0 
@@ -1011,8 +992,29 @@ exports.regenerateSection = async (req, res) => {
         // Extend here as more mutation types are added
       }
 
-      // Validate the mutated blueprint (this safely fills defaults for any missing fields)
-      const { blueprint: validBlueprint } = validatePortfolioBlueprint(blueprint);
+      // Simple inline blueprint validation and merging (KISS)
+      const validBlueprint = {
+        portfolioTone: blueprint.portfolioTone || "professional",
+        heroSection: {
+          headline: blueprint.heroSection?.headline || "Building things that matter.",
+          subheadline: blueprint.heroSection?.subheadline || "Developer, problem solver, and lifelong learner.",
+          ctaText: blueprint.heroSection?.ctaText || "See My Work",
+          heroStyle: blueprint.heroSection?.heroStyle || "centered"
+        },
+        visualPersonalization: {
+          animationIntensity: blueprint.visualPersonalization?.animationIntensity || "subtle",
+          typographyPersonality: blueprint.visualPersonalization?.typographyPersonality || "bold-modern",
+          spacingStyle: blueprint.visualPersonalization?.spacingStyle || "balanced",
+          ctaStyle: blueprint.visualPersonalization?.ctaStyle || "gradient",
+          cardDensity: blueprint.visualPersonalization?.cardDensity || "balanced",
+          projectPresentation: blueprint.visualPersonalization?.projectPresentation || "bento-grid"
+        },
+        themeTweaks: {
+          primaryAccent: blueprint.themeTweaks?.primaryAccent || "cyan-400",
+          secondaryAccent: blueprint.themeTweaks?.secondaryAccent || "emerald-400",
+          highlightStyle: blueprint.themeTweaks?.highlightStyle || "subtle-glow"
+        }
+      };
       blueprint = validBlueprint;
 
       // ── 2. Build a section-scoped HTML prompt ────────────────────────────
@@ -1048,7 +1050,7 @@ BLUEPRINT CONTEXT:
 - Typography: ${blueprint.visualPersonalization?.typographyPersonality}
 - Primary Accent: ${blueprint.themeTweaks?.primaryAccent}
 - Secondary Accent: ${blueprint.themeTweaks?.secondaryAccent}
-- Design System: Profilio Design System V1 — ${DESIGN_SYSTEM_CAPABILITIES.personality}
+- Design System: Profilio Design System V1 — Premium developer portfolio focused on technical authority and modern engineering aesthetics.
 
 USER DATA:
 - Name: ${userData.personalInfo?.name}
@@ -1114,10 +1116,6 @@ Return ONLY: { "sectionHtml": "..." }`;
         'generatedCode.html': assembled.html,
         blueprint,
       });
-
-      // ── 6. Invalidate cache ───────────────────────────────────────────────
-      const cacheKey = buildCacheKey(project.content || {});
-      cacheDelete(cacheKey);
 
       console.log(`[SectionRegen] ✅ Section '${section}' regenerated successfully.`);
 

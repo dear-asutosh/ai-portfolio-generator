@@ -24,6 +24,31 @@ const getInitials = (name) => {
 };
 
 /**
+ * Sanitizes and flattens grouped/prefixed skill strings into individual skill names.
+ */
+const cleanSkills = (skillsArray) => {
+  if (!Array.isArray(skillsArray)) return [];
+  const cleaned = [];
+  skillsArray.forEach(skill => {
+    if (typeof skill !== 'string') return;
+    let content = skill;
+    if (skill.includes(':')) {
+      content = skill.split(':').slice(1).join(':');
+    }
+    if (content.includes(',')) {
+      content.split(',').forEach(item => {
+        const trimmed = item.trim();
+        if (trimmed && !cleaned.includes(trimmed)) cleaned.push(trimmed);
+      });
+    } else {
+      const trimmed = content.trim();
+      if (trimmed && !cleaned.includes(trimmed)) cleaned.push(trimmed);
+    }
+  });
+  return cleaned;
+};
+
+/**
  * Resolves a technology name to the appropriate Devicon CSS class name.
  * Handles custom mappings for standard software/language terms.
  */
@@ -127,7 +152,8 @@ const getDeviconClass = (skillName) => {
  * Compiles HTML structure for Profilio Design System V1.
  */
 const compileHTML = (userData, githubData, leetcodeData) => {
-  const { personalInfo, skills = [], experience = [], projects = [], education = [] } = userData;
+  const { personalInfo, skills: rawSkills = [], experience = [], projects = [], education = [] } = userData;
+  const skills = cleanSkills(rawSkills);
   const name = personalInfo?.name || 'Developer';
   const role = personalInfo?.targetRole || 'Software Engineer';
   const bio = personalInfo?.bio || 'Passionate developer dedicated to engineering clean and scalable solutions.';
@@ -904,7 +930,8 @@ const compileCSS = () => {
  * email copier, custom chatbot widget, and fetches GitHub contribution history.
  */
 const compileJS = (userData) => {
-  const { personalInfo, skills = [], experience = [], projects = [], education = [] } = userData;
+  const { personalInfo, skills: rawSkills = [], experience = [], projects = [], education = [] } = userData;
+  const skills = cleanSkills(rawSkills);
   const name = personalInfo?.name || 'Developer';
   const initials = getInitials(name);
   const email = personalInfo?.email || '';

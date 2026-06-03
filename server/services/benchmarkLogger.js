@@ -1,9 +1,6 @@
-const fs = require("fs");
-const path = require("path");
-
 /**
- * Logs generation performance metrics to both a local JSONL file 
- * and prints a clean, detailed summary to the console.
+ * Logs generation performance metrics to standard console output.
+ * Bypasses local filesystem operations for serverless compatibility.
  * 
  * @param {Object} entry - Benchmark entry object
  * @param {string} entry.provider - The provider name (NVIDIA, OpenRouter, Groq)
@@ -16,28 +13,6 @@ const path = require("path");
  */
 const logBenchmark = ({ provider, model, layer, durationMs, success, outputLength, error = null }) => {
   try {
-    const logsDir = path.join(__dirname, "../logs");
-    
-    // Ensure logs directory exists
-    if (!fs.existsSync(logsDir)) {
-      fs.mkdirSync(logsDir, { recursive: true });
-    }
-
-    const logFilePath = path.join(logsDir, "generation_benchmarks.jsonl");
-    const logEntry = {
-      timestamp: new Date().toISOString(),
-      provider: provider || "Unknown",
-      model: model || "Unknown",
-      layer: layer || "Unknown",
-      durationMs: durationMs || 0,
-      success: !!success,
-      outputLength: outputLength || 0,
-      error: error ? error.message || String(error) : null
-    };
-
-    // Append to JSONL file
-    fs.appendFileSync(logFilePath, JSON.stringify(logEntry) + "\n", "utf8");
-
     // Print styled console log
     const durationSeconds = (durationMs / 1000).toFixed(2);
     const statusIcon = success ? "✓ Success" : "✗ Failed";
@@ -52,9 +27,14 @@ const logBenchmark = ({ provider, model, layer, durationMs, success, outputLengt
       `Status: ${statusColor}${statusIcon}${resetColor} | ` +
       `Length: ${outputLength} chars`
     );
+
+    if (error) {
+      console.error(`[Benchmark Error Detail] ${error.message || String(error)}`);
+    }
   } catch (err) {
     console.error("[Benchmark Logger Error] Failed to log benchmark:", err.message);
   }
 };
 
 module.exports = { logBenchmark };
+
