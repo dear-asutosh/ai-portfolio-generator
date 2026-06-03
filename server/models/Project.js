@@ -22,7 +22,7 @@ const ProjectSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ['Draft', 'Live'],
+        enum: ['Draft', 'Live', 'Archived'],
         default: 'Draft'
     },
     content: {
@@ -59,6 +59,19 @@ const ProjectSchema = new mongoose.Schema({
     views: {
         type: Number,
         default: 0
+    },
+    hostingExpiresAt: {
+        type: Date,
+        default: null
+    },
+    archivedAt: {
+        type: Date,
+        default: null
+    },
+    archivedReason: {
+        type: String,
+        enum: ['expired', 'subscription_ended', 'manual', 'plan_downgrade', null],
+        default: null
     }
 
 }, {

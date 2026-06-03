@@ -33,6 +33,19 @@ app.use(helmet());
 // Compression
 app.use(compression());
 
+// Webhook route needs raw body for signature verification
+app.use('/api/subscription/webhook', express.raw({ type: 'application/json' }), (req, res, next) => {
+    if (req.body && Buffer.isBuffer(req.body)) {
+        req.rawBody = req.body.toString('utf8');
+        try {
+            req.body = JSON.parse(req.rawBody);
+        } catch (e) {
+            req.body = {};
+        }
+    }
+    next();
+});
+
 // Body parser
 app.use(express.json());
 
@@ -59,6 +72,10 @@ app.use(cors({
 const auth = require('./routes/authRoutes');
 const projects = require('./routes/projects');
 const ai = require('./routes/aiRoutes');
+const subscription = require('./routes/subscriptionRoutes');
+const admin = require('./routes/adminRoutes');
+const cron = require('./routes/cronRoutes');
+const payments = require('./routes/paymentRoutes');
 
 // Basic Route
 app.get('/', (req, res) => {
@@ -69,6 +86,10 @@ app.get('/', (req, res) => {
 app.use('/api/auth', auth);
 app.use('/api/projects', projects);
 app.use('/api/ai', ai);
+app.use('/api/subscription', subscription);
+app.use('/api/admin', admin);
+app.use('/api/cron', cron);
+app.use('/api', payments);
 
 // Health Check Route
 app.get('/api/health', (req, res) => {

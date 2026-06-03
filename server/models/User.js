@@ -52,6 +52,26 @@ const UserSchema = new mongoose.Schema({
         unique: true,
         sparse: true
     },
+    plan: {
+        type: String,
+        enum: ['free', 'pro', 'lifetime'],
+        default: 'free'
+    },
+    planUpdatedAt: {
+        type: Date
+    },
+    subscription: {
+        razorpayCustomerId: String,
+        razorpaySubscriptionId: String,
+        status: {
+            type: String,
+            enum: ['created', 'authenticated', 'active', 'pending', 'halted', 'cancelled', 'completed', 'expired', null],
+            default: null
+        },
+        currentPeriodStart: Date,
+        currentPeriodEnd: Date,
+        gracePeriodEnd: Date
+    },
     createdAt: {
         type: Date,
         default: Date.now
