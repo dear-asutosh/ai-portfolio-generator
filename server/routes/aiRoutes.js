@@ -2,7 +2,6 @@ const express = require("express");
 const router = express.Router();
 const multer = require("multer");
 const { parseResume, generatePortfolioData, suggestImprovements, initializePortfolio, modifyPortfolioCode, regenerateSection } = require("../controllers/aiController");
-const { generateBlueprint } = require("../controllers/blueprintController");
 const { protect } = require("../middleware/authMiddleware");
 
 // Multer config for memory storage
@@ -15,9 +14,37 @@ router.post("/suggest", protect, suggestImprovements);
 router.post("/initialize-portfolio", protect, initializePortfolio);
 router.post("/modify-portfolio", protect, modifyPortfolioCode);
 
-// Template Intelligence Layer — standalone blueprint endpoint
-// Useful for client-side "personalization preview" before code generation
-router.post("/generate-blueprint", protect, generateBlueprint);
+// Template Intelligence Layer — standalone blueprint endpoint (backward-compatible static default)
+router.post("/generate-blueprint", protect, (req, res) => {
+  res.status(200).json({
+    success: true,
+    blueprint: {
+      portfolioTone: "professional",
+      heroSection: {
+        headline: "Building things that matter.",
+        subheadline: "Developer, problem solver, and lifelong learner.",
+        ctaText: "See My Work",
+        heroStyle: "centered"
+      },
+      visualPersonalization: {
+        animationIntensity: "subtle",
+        typographyPersonality: "bold-modern",
+        spacingStyle: "balanced",
+        ctaStyle: "gradient",
+        cardDensity: "balanced",
+        projectPresentation: "bento-grid"
+      },
+      themeTweaks: {
+        primaryAccent: "cyan-400",
+        secondaryAccent: "emerald-400",
+        highlightStyle: "subtle-glow"
+      }
+    },
+    meta: {
+      designSystem: "Profilio Design System V1 (Static Default)"
+    }
+  });
+});
 
 /**
  * POST /api/ai/regenerate-section
