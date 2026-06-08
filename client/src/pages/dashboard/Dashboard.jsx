@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useLocation, useParams, useNavigate } from 'react-router-dom';
 import routes from '../../routes';
 import { LayoutGrid, Plus, ExternalLink, Clock, Loader2, Trash2, Edit2, Download, Lock, RefreshCw } from 'lucide-react';
@@ -30,6 +30,7 @@ const Dashboard = () => {
   // Check for success messages from navigation state
   useEffect(() => {
     if (location.state?.message) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setNotification({
         type: location.state.type || 'success',
         message: location.state.message
@@ -64,7 +65,7 @@ const Dashboard = () => {
 
     fetchProjects();
     refreshSubscription();
-  }, [cleanUsername, user, isOwner]);
+  }, [cleanUsername, user, isOwner, navigate, refreshSubscription]);
 
   const handleCreateProject = () => {
     if (!canCreatePortfolio) {
@@ -89,6 +90,7 @@ const Dashboard = () => {
       });
       refreshSubscription();
     } catch (err) {
+      console.error('[deleteProject] Error:', err);
       setNotification({
         type: 'error',
         message: 'Failed to delete project.'
@@ -113,6 +115,7 @@ const Dashboard = () => {
         });
       }
     } catch (err) {
+      console.error('[renameProject] Error:', err);
       setNotification({
         type: 'error',
         message: 'Failed to rename project.'

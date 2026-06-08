@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+/* eslint-disable react-refresh/only-export-components */
+import { createContext, useContext, useState, useEffect } from 'react';
 import API from '../apis/api';
 
 const AuthContext = createContext();
@@ -79,6 +80,7 @@ export const AuthProvider = ({ children }) => {
           return { success: true, user: userData };
         }
       } catch (err) {
+        console.error('[verifyUser] Auth check failed:', err);
         localStorage.removeItem('token');
         localStorage.removeItem('user');
       }

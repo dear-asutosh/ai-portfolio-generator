@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Eye, Edit2, Loader2, AlertTriangle, ArrowLeft, Sparkles, ChevronUp, ChevronDown } from 'lucide-react';
+import { Edit2, AlertTriangle, ArrowLeft, Sparkles, ChevronUp, ChevronDown } from 'lucide-react';
 import API from '../../apis/api';
 import { useAuth } from '../../context/AuthContext';
 import ExpiredPortfolioPage from './ExpiredPortfolioPage';
@@ -80,6 +80,11 @@ const PublicPortfolio = () => {
   <base href="/" target="_self" />
   <title>${project.title} - Live Portfolio</title>
 
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Lexend:wght@100..900&family=Plus+Jakarta+Sans:ital,wght@0,100..800;1,100..800&display=swap" rel="stylesheet">
+
   <!-- FontAwesome Icons -->
   <link
     rel="stylesheet"
@@ -132,7 +137,7 @@ const PublicPortfolio = () => {
       event.preventDefault();
     });
     (function(){'use strict'; try { ${safeJs} } catch (error) { console.warn('[Portfolio] Script initialization skipped:', error.message); } })();
-  <\/script>
+  </script>
 </body>
 </html>`;
 

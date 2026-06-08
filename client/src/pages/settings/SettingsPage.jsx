@@ -71,6 +71,7 @@ export default function SettingsPage() {
 
   useEffect(() => {
     if (user) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setFormData({
         name: user.name || '',
         email: user.email || '',
@@ -80,6 +81,26 @@ export default function SettingsPage() {
       });
     }
   }, [user]);
+
+  const checkUsernameAvailability = useCallback(async (username) => {
+    if (!username) return;
+    setUsernameStatus(prev => ({ ...prev, loading: true }));
+    try {
+      const res = await API.get(`/auth/checkusername/${username}`);
+      setUsernameStatus({
+        loading: false,
+        available: res.data.available,
+        message: res.data.message
+      });
+    } catch (err) {
+      console.error('[checkUsernameAvailability] Error:', err);
+      setUsernameStatus({
+        loading: false,
+        available: false,
+        message: 'Error checking availability'
+      });
+    }
+  }, []);
 
   // Debounced username check
   useEffect(() => {
@@ -92,26 +113,7 @@ export default function SettingsPage() {
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [formData.username, user?.username]);
-
-  const checkUsernameAvailability = async (username) => {
-    if (!username) return;
-    setUsernameStatus(prev => ({ ...prev, loading: true }));
-    try {
-      const res = await API.get(`/auth/checkusername/${username}`);
-      setUsernameStatus({
-        loading: false,
-        available: res.data.available,
-        message: res.data.message
-      });
-    } catch (err) {
-      setUsernameStatus({
-        loading: false,
-        available: false,
-        message: 'Error checking availability'
-      });
-    }
-  };
+  }, [formData.username, user?.username, checkUsernameAvailability]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });

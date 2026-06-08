@@ -1,142 +1,154 @@
-import React from 'react';
-import { motion } from 'framer-motion';
 import { 
   FileUp, 
-  Search, 
-  Edit3, 
+  Cpu, 
+  SlidersHorizontal, 
   Rocket, 
   ArrowRight,
-  MousePointer2,
   CheckCircle2
 } from 'lucide-react';
 
-const StepSection = ({ number, title, description, icon: Icon, image, reverse }) => (
-  <div className={`flex flex-col ${reverse ? 'lg:flex-row-reverse' : 'lg:flex-row'} items-center gap-16 py-24 border-b border-white/5 last:border-0`}>
-    <div className="flex-1">
-      <motion.div
-        initial={{ opacity: 0, x: reverse ? 30 : -30 }}
-        whileInView={{ opacity: 1, x: 0 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.6 }}
-      >
-        <div className="flex items-center gap-4 mb-6">
-          <div className="w-10 h-10 rounded-full bg-cyan-500 flex items-center justify-center text-white font-bold text-sm shadow-[0_0_20px_rgba(6,182,212,0.5)]">
+
+const StepSection = ({ number, title, description, icon: Icon, reverse, details }) => (
+  <div className={`flex flex-col ${reverse ? 'lg:flex-row-reverse' : 'lg:flex-row'} items-center gap-12 py-20 border-b border-white/5 last:border-0 reveal-container`}>
+    {/* Text info */}
+    <div className="flex-grow lg:w-1/2 reveal-card">
+      <div>
+        <div className="flex items-center gap-3 mb-4">
+          <span className="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-cyan-400 font-mono text-xs font-bold shadow-md">
             {number}
-          </div>
-          <span className="text-cyan-500 font-mono text-sm tracking-widest uppercase">The Process</span>
+          </span>
+          <span className="text-slate-500 font-mono text-[10px] tracking-widest uppercase">The Pipeline</span>
         </div>
-        <h2 className="text-3xl md:text-5xl font-black text-white mb-6 tracking-tighter">
+        
+        <h2 className="text-2xl md:text-4xl font-semibold text-white mb-4 tracking-tighter">
           {title}
         </h2>
-        <p className="text-gray-400 text-lg leading-relaxed mb-8">
+        
+        <p className="text-slate-400 text-sm md:text-base leading-relaxed mb-6 font-light">
           {description}
         </p>
-        <div className="flex flex-col gap-4">
-          <div className="flex items-center gap-3 text-gray-300">
-            <CheckCircle2 className="w-5 h-5 text-emerald-400" />
-            <span>Zero manual data entry required</span>
-          </div>
-          <div className="flex items-center gap-3 text-gray-300">
-            <CheckCircle2 className="w-5 h-5 text-emerald-400" />
-            <span>Optimized for ATS-friendly formatting</span>
-          </div>
+        
+        <div className="space-y-2.5">
+          {details.map((detail, idx) => (
+            <div key={idx} className="flex items-center gap-2.5 text-xs text-slate-300">
+              <CheckCircle2 className="w-4 h-4 text-cyan-400 shrink-0" />
+              <span>{detail}</span>
+            </div>
+          ))}
         </div>
-      </motion.div>
+      </div>
     </div>
     
-    <div className="flex-1 w-full">
-      <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
-        whileInView={{ opacity: 1, scale: 1 }}
-        viewport={{ once: true }}
-        className="relative group aspect-video bg-[#111] rounded-2xl border border-white/10 overflow-hidden"
-      >
-        <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/10 to-purple-600/10 group-hover:opacity-100 transition-opacity" />
-        <div className="absolute inset-0 flex items-center justify-center">
-          <Icon className="w-24 h-24 text-white/10 group-hover:text-cyan-400/20 group-hover:scale-110 transition-all duration-500" />
-        </div>
-        {/* Decorative elements to simulate UI */}
-        <div className="absolute top-4 left-4 right-4 flex gap-2">
-           <div className="h-1 flex-1 bg-white/5 rounded-full" />
-           <div className="h-1 flex-1 bg-white/5 rounded-full" />
-           <div className="h-1 flex-1 bg-white/5 rounded-full" />
-        </div>
-      </motion.div>
+    {/* Visual Card */}
+    <div className="flex-grow lg:w-1/2 w-full reveal-card">
+      <div className="relative aspect-video bg-[#08080a]/60 border border-white/5 rounded-2xl overflow-hidden flex items-center justify-center p-8 group hover:border-white/10 hover:scale-[1.005] hover:shadow-[0_20px_50px_rgba(0,0,0,0.3)] transition-all duration-300">
+        <div className="absolute inset-0 bg-radial-gradient from-cyan-500/[0.03] to-transparent pointer-events-none" />
+        <Icon className="w-16 h-16 text-slate-600 group-hover:text-cyan-400 group-hover:scale-105 transition-all duration-300" />
+      </div>
     </div>
   </div>
 );
 
 const HowItWorksPage = () => {
+  const stepsData = [
+    {
+      number: "01",
+      title: "Feed Your Profile Details",
+      description: "Provide your background. You can upload a PDF resume, import a PDF download of your LinkedIn profile, or complete our guided markdown form. No manual formatting, alignment, or design styling is required.",
+      icon: FileUp,
+      details: [
+        "Parses PDF, DOCX, and JPG resume structures",
+        "LinkedIn export guide provided inline",
+        "Saves draft instantly to begin AI processing"
+      ]
+    },
+    {
+      number: "02",
+      title: "ATS-Optimized AI Synthesis",
+      description: "Our Llama-3 context engine parses the imported details. It converts raw experience bullet points into metrics-focused accomplishments, fixes grammatical errors, optimizes key terms for ATS algorithms, and structures your profile biography.",
+      icon: Cpu,
+      reverse: true,
+      details: [
+        "Advanced Llama-3-70b semantic parsing",
+        "Automatic target-role keyword alignment",
+        "Generates cohesive professional summaries"
+      ]
+    },
+    {
+      number: "03",
+      title: "Configure Integrations & Chatbot",
+      description: "Fine-tune your layout. Sync your GitHub and LeetCode usernames to automatically populate live repository cards and status badges. Train your custom conversational recruiter chatbot widget to reply to visitor questions.",
+      icon: SlidersHorizontal,
+      details: [
+        "Live GitHub repository language cards",
+        "LeetCode competitive coding progress badges",
+        "Customizable AI chatbot answering visitor FAQs"
+      ]
+    },
+    {
+      number: "04",
+      title: "Launch Globally in One Click",
+      description: "Publish your portfolio instantly. Claim a unique profilio.app subdomain or connect your own DNS values. Your portfolio compiles to static React assets hosted on our high-speed global CDN edge locations.",
+      icon: Rocket,
+      reverse: true,
+      details: [
+        "Static page assets hosted on global edge CDN",
+        "Automatic SEO meta header configuration",
+        "Instant hot-reload editor updates"
+      ]
+    }
+  ];
+
   return (
-    <div className="min-h-screen bg-[#0a0a0a] pt-32 pb-20 px-4">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-[#030304] pt-32 pb-20 px-6 sm:px-8 lg:px-16 relative overflow-hidden">
+
+      {/* Grid Pattern */}
+      <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.015)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.015)_1px,transparent_1px)] bg-[size:100px_100px] pointer-events-none opacity-30" />
+
+      <div className="max-w-7xl mx-auto relative z-10">
+        
         {/* Header */}
-        <div className="text-center mb-32">
-          <motion.h1 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-5xl md:text-7xl font-black text-white tracking-tighter mb-8"
-          >
-            From PDF to Live <span className="gradient-text">in Minutes.</span>
-          </motion.h1>
-          <motion.p 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="text-gray-400 text-xl max-w-3xl mx-auto leading-relaxed"
-          >
-            We've automated the most painful parts of building a portfolio. No more fighting with CSS or copy-pasting your work history.
-          </motion.p>
-        </div>
-
-        {/* Steps */}
-        <div className="space-y-0">
-          <StepSection 
-            number="01"
-            title="Import Your Story"
-            description="Upload your resume PDF or simply import your profile from LinkedIn. Our AI scans the document and extracts every relevant detail about your career."
-            icon={FileUp}
-          />
-          <StepSection 
-            number="02"
-            title="AI Enhancement"
-            description="The AI doesn't just read—it refines. It improves your project descriptions, fixes grammar, and structures your data into a premium portfolio format."
-            icon={Search}
-            reverse
-          />
-          <StepSection 
-            number="03"
-            title="Personalize and Tweak"
-            description="Tailor the design to your brand. Use our AI Chat Modifier to tweak layouts, add custom sections, or adjust the entire aesthetic just by typing."
-            icon={Edit3}
-          />
-          <StepSection 
-            number="04"
-            title="Launch to the World"
-            description="Hit publish and your portfolio is live instantly. You get a unique URL and a high-performance site that looks great on any device."
-            icon={Rocket}
-            reverse
-          />
-        </div>
-
-        {/* Final CTA */}
-        <motion.div 
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="mt-32 p-12 rounded-[2rem] bg-gradient-to-br from-cyan-600/20 to-purple-600/20 border border-white/10 text-center relative overflow-hidden"
-        >
-          <div className="absolute top-0 right-0 p-8 opacity-10">
-            <Rocket className="w-40 h-40" />
-          </div>
-          <h2 className="text-3xl md:text-5xl font-black text-white mb-6">Ready to stop coding your portfolio?</h2>
-          <p className="text-gray-300 text-lg mb-10 max-w-2xl mx-auto">
-            Join 100+ developers who built their portfolios in under 5 minutes this week.
+        <div className="text-center mb-28">
+          <div className="mono-label mb-4">[SYSTEM WALKTHROUGH]</div>
+          
+          <h1 className="text-4xl md:text-6xl font-semibold text-white tracking-tighter mb-6 leading-none reveal-text">
+            How it <span className="gradient-text">works</span>.
+          </h1>
+          
+          <p className="text-slate-400 text-base md:text-lg max-w-xl mx-auto font-light leading-relaxed font-sans reveal-text">
+            We have automated the design, integration, and hosting pipelines of developer portfolios.
           </p>
-          <button className="px-10 py-4 bg-white text-black font-bold rounded-full hover:scale-105 active:scale-95 transition-transform flex items-center gap-2 mx-auto">
-            Get Started Now <ArrowRight className="w-5 h-5" />
-          </button>
-        </motion.div>
+        </div>
+
+        {/* Timeline Steps */}
+        <div className="space-y-4">
+          {stepsData.map((step, index) => (
+            <StepSection key={index} {...step} />
+          ))}
+        </div>
+
+        {/* Bottom CTA Card */}
+        <div className="mt-32 reveal-container">
+          <div className="reveal-card">
+            <div className="p-12 md:p-20 rounded-2xl bg-[#08080a]/60 border border-white/5 text-center relative overflow-hidden hover:border-white/10 hover:scale-[1.005] hover:shadow-[0_20px_50px_rgba(0,0,0,0.3)] transition-all duration-300">
+              <h2 className="text-3xl md:text-5xl font-semibold text-white mb-6 tracking-tighter">
+                Ready to compile your profile?
+              </h2>
+              
+              <p className="text-slate-400 text-sm md:text-base mb-10 max-w-lg mx-auto leading-relaxed font-light font-sans">
+                Join developers who built and hosted their professional portfolios in under five minutes.
+              </p>
+              
+              <a 
+                href="/project/new" 
+                className="px-8 py-3.5 bg-white text-black font-semibold text-xs md:text-sm rounded-xl hover:bg-slate-100 transition-colors inline-flex items-center gap-2 mx-auto cursor-pointer shadow-[0_4px_15px_rgba(255,255,255,0.1)]"
+              >
+                <span>Compile My Portfolio</span>
+                <ArrowRight className="w-4 h-4" />
+              </a>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import { Check, X, ShieldCheck, Sparkles, Zap, Infinity, ChevronDown, ChevronUp, Loader } from 'lucide-react';
+import { useState } from 'react';
+import { Check, X, Zap, Sparkles, Loader, ChevronDown, ChevronUp } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useSubscription } from '../../context/SubscriptionContext';
 import { useRazorpay } from '../../hooks/useRazorpay';
 import Notification from '../../components/common/Notification';
+
 
 export const PricingPage = () => {
   const navigate = useNavigate();
@@ -55,17 +55,17 @@ export const PricingPage = () => {
       period: '',
       description: 'Ideal for students and developers testing the platform.',
       features: [
-        { text: '1 Active Portfolio', included: true },
-        { text: 'Hosted for 7 Days', included: true },
-        { text: 'Public Shareable Link', included: true },
-        { text: 'Mobile Responsive Designs', included: true },
-        { text: 'Source Code Export', included: false },
-        { text: 'Custom Domain Connection', included: false },
+        { text: '1 Active Deployed Portfolio', included: true },
+        { text: 'Hosted for 7 Days Live', included: true },
+        { text: 'Public Shareable Domain Link', included: true },
+        { text: 'Responsive Dev Templates', included: true },
+        { text: 'Source Code Export Access', included: false },
+        { text: 'Custom DNS Domain Bind', included: false },
         { text: 'Priority Generation Queue', included: false }
       ],
       ctaText: user ? (currentPlan === 'free' ? 'Current Plan' : 'Go to Dashboard') : 'Start Free',
-      ctaClass: 'bg-white/5 border border-white/10 text-white hover:bg-white/10',
-      icon: <Zap size={22} className="text-slate-400" />
+      ctaClass: 'bg-white/[0.02] border border-white/5 text-slate-300 hover:bg-white/5 hover:text-white',
+      icon: <Zap size={18} className="text-slate-400" />
     },
     {
       id: 'pro',
@@ -74,17 +74,17 @@ export const PricingPage = () => {
       period: '/month',
       description: 'Perfect for active job seekers and freelancers.',
       features: [
-        { text: 'Up to 5 Active Portfolios', included: true },
-        { text: 'Hosting active while subscribed', included: true },
-        { text: 'Public Shareable Link', included: true },
-        { text: 'Mobile Responsive Designs', included: true },
+        { text: 'Up to 5 Active Deployed Portfolios', included: true },
+        { text: 'Permanent Active Edge Hosting', included: true },
+        { text: 'Public Shareable Domain Link', included: true },
+        { text: 'Responsive Dev Templates', included: true },
         { text: 'Source Code Export Access', included: true },
         { text: 'Priority Generation Queue', included: true },
-        { text: 'Custom Domain (Coming Soon)', included: true }
+        { text: 'Custom DNS Domain Bind', included: true }
       ],
       ctaText: currentPlan === 'pro' ? 'Current Plan' : 'Upgrade to Pro',
-      ctaClass: 'bg-gradient-to-r from-cyan-500 to-blue-500 text-black hover:from-cyan-400 hover:to-blue-400 font-semibold shadow-[0_0_20px_rgba(6,182,212,0.25)]',
-      icon: <Zap size={22} className="text-cyan-400" />,
+      ctaClass: 'bg-white text-black hover:bg-slate-100 font-semibold shadow-[0_4px_15px_rgba(255,255,255,0.15)]',
+      icon: <Zap size={18} className="text-cyan-400 animate-pulse" />,
       popular: true
     },
     {
@@ -95,88 +95,64 @@ export const PricingPage = () => {
       description: 'Best choice for serious long-term career branding.',
       features: [
         { text: 'Unlimited Active Portfolios', included: true },
-        { text: 'Permanent Lifetime Hosting', included: true },
-        { text: 'Public Shareable Link', included: true },
-        { text: 'Mobile Responsive Designs', included: true },
+        { text: 'Permanent Lifetime Edge Hosting', included: true },
+        { text: 'Public Shareable Domain Link', included: true },
+        { text: 'Responsive Dev Templates', included: true },
         { text: 'Source Code Export Access', included: true },
         { text: 'Priority Generation Queue', included: true },
-        { text: 'Lifetime free updates & features', included: true }
+        { text: 'Permanent Free updates & features', included: true }
       ],
       ctaText: currentPlan === 'lifetime' ? 'Current Plan' : 'Get Lifetime Access',
-      ctaClass: 'bg-gradient-to-r from-amber-500 to-yellow-500 text-black hover:from-amber-400 hover:to-yellow-400 font-semibold shadow-[0_0_20px_rgba(245,158,11,0.25)]',
-      icon: <Sparkles size={22} className="text-amber-400" />
+      ctaClass: 'bg-[#08080a] border border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/5 font-semibold',
+      icon: <Sparkles size={18} className="text-amber-400" />
     }
   ];
 
   const faqData = [
     {
       question: "What is an active portfolio?",
-      answer: "An active portfolio is currently hosted and publicly accessible via your shareable URL. You can have multiple draft portfolios that you edit in private, and turn them live or draft whenever you want, depending on your plan limit."
+      answer: "An active portfolio is currently hosted and publicly accessible via your shareable URL. You can edit multiple drafts in private and toggle them live or draft depending on your plan limit."
     },
     {
       question: "What happens when the 7-day hosting expires on the Free plan?",
-      answer: "Once the 7 days are up, your portfolio status automatically changes from LIVE to ARCHIVED. Your content is safely stored in our system, but the public link will display a conversion page. You can reactivate hosting at any time by upgrading to a paid plan."
+      answer: "Your portfolio status automatically changes from LIVE to ARCHIVED. Your content remains safely stored, but the public link is paused. You can reactivate hosting instantly by upgrading."
     },
     {
       question: "How does the Pro plan monthly subscription work?",
-      answer: "The Pro plan is billed monthly. Your portfolios remain live as long as the subscription is active. If your subscription fails or is cancelled, we start a 7-day grace period where your portfolios remain live. If payment isn't received within the 7 days, your portfolios are archived."
-    },
-    {
-      question: "What is the 30-day grace period for existing users?",
-      answer: "We appreciate our early adopters! All portfolios generated before our pricing launch are granted a 30-day grace period. They will remain live for 30 days, after which the hosting limit is evaluated according to your plan (e.g. Free users will have their extra portfolios archived, keeping only the most recently updated active)."
+      answer: "The Pro plan is billed monthly. If your subscription is cancelled, we start a 7-day grace period where your portfolios remain live before archiving."
     },
     {
       question: "Can I cancel my subscription at any time?",
-      answer: "Yes, you can easily cancel your monthly Pro subscription from your Account Settings. Your hosting will remain live until the end of your current billing cycle, after which you have a 7-day grace period before archival."
+      answer: "Yes, you can easily cancel your monthly Pro subscription from your Account Settings. Your hosting will remain live until the end of your current billing cycle."
     },
     {
       question: "What are the benefits of the Lifetime plan?",
-      answer: "The Lifetime plan is a one-time purchase of ₹999. It grants you unlimited portfolios, permanent hosting that never expires, full source code export access, and priority access to all future updates and premium features."
+      answer: "The Lifetime plan is a one-time purchase of ₹999. It grants you unlimited portfolios, permanent edge hosting, full source code exports, and priority access to all future system features."
     }
   ];
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white pt-24 pb-16 px-4 md:px-8">
-      {/* Background gradients */}
-      <div className="absolute top-0 left-1/4 w-96 h-96 bg-cyan-500/5 rounded-full blur-[100px] pointer-events-none" />
-      <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-purple-500/5 rounded-full blur-[100px] pointer-events-none" />
+    <div className="min-h-screen bg-[#030304] text-white pt-32 pb-20 px-6 sm:px-8 lg:px-16 relative overflow-hidden">
+      
+      {/* Background Grid Accent */}
+      <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.015)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.015)_1px,transparent_1px)] bg-[size:100px_100px] pointer-events-none opacity-30" />
 
-      {/* Hero Section */}
-      <div className="max-w-4xl mx-auto text-center mb-16 relative">
-        <motion.h1
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-4xl md:text-5xl lg:text-6xl font-heading font-bold mb-4 tracking-tight leading-none"
-        >
-          Build a Portfolio That{' '}
-          <span className="bg-gradient-to-r from-white via-[#2af7d1] to-[#00f2ff] bg-clip-text text-transparent">
-            Opens Doors
-          </span>
-        </motion.h1>
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.1 }}
-          className="text-slate-400 text-base md:text-lg max-w-xl mx-auto mb-8"
-        >
-          Generate, host, and share a professional portfolio in minutes using AI.
-        </motion.p>
-        {!user && (
-          <motion.button
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.2 }}
-            onClick={() => navigate('/auth/signup')}
-            className="px-6 py-3 rounded-full bg-[#06b6d4] text-black font-semibold hover:bg-[#08c5e6] shadow-[0_4px_25px_rgba(6,182,212,0.3)] transition"
-          >
-            Generate Free Portfolio
-          </motion.button>
-        )}
+      {/* Header Section */}
+      <div className="max-w-4xl mx-auto text-center mb-24 relative z-10">
+        <div className="mono-label mb-4">[PRICING MATRIX]</div>
+        
+        <h1 className="text-4xl md:text-6xl font-semibold mb-6 tracking-tighter text-white leading-none reveal-text">
+          Select your <span className="gradient-text">tier</span>.
+        </h1>
+        
+        <p className="text-slate-400 text-base md:text-lg max-w-md mx-auto font-light leading-relaxed font-sans reveal-text">
+          Sleek, transparent pricing tiers for developers at any scale.
+        </p>
       </div>
 
       {/* Pricing Cards Grid */}
-      <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 mb-24 items-stretch">
-        {planCards.map((planCard, index) => {
+      <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6 mb-28 items-stretch relative z-10 reveal-container">
+        {planCards.map((planCard) => {
           let buttonText = planCard.ctaText;
           let isDisabled = isProcessing || currentPlan === planCard.id;
 
@@ -206,145 +182,146 @@ export const PricingPage = () => {
           }
 
           return (
-            <motion.div
+            <div
               key={planCard.id}
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 + 0.2 }}
-              className={`relative flex flex-col p-8 rounded-2xl border bg-white/5 backdrop-blur-xl transition-all duration-300 ${
-                planCard.popular
-                  ? 'border-cyan-500/40 ring-1 ring-cyan-500/20 shadow-[0_0_30px_rgba(6,182,212,0.1)] scale-105 md:-translate-y-2'
-                  : 'border-white/10 hover:border-white/20'
-              }`}
+              className="h-full reveal-card"
             >
-              {planCard.popular && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-0.5 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 text-xs font-mono tracking-widest font-semibold text-black uppercase shadow-md">
-                  Most Popular
-                </div>
-              )}
+              <div className={`relative flex flex-col p-8 rounded-2xl border bg-[#08080a]/60 backdrop-blur-md hover:scale-[1.01] hover:shadow-[0_20px_50px_rgba(0,0,0,0.3)] transition-all duration-300 h-full justify-between ${
+                planCard.popular
+                  ? 'border-cyan-500/30 shadow-[0_4px_30px_rgba(6,182,212,0.08)] hover:shadow-[0_20px_50px_rgba(6,182,212,0.15)]'
+                  : 'border-white/5 hover:border-white/10'
+              }`}>
+                {planCard.popular && (
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3.5 py-0.5 rounded-full bg-cyan-500/10 border border-cyan-500/25 text-[8px] font-mono tracking-widest font-bold text-cyan-400 uppercase shadow-sm">
+                    Recommended
+                  </div>
+                )}
 
-              <div className="flex items-center gap-3 mb-4">
-                {planCard.icon}
-                <h3 className="text-xl font-heading font-bold">{planCard.name}</h3>
-              </div>
+                <div>
+                  <div className="flex items-center gap-3.5 mb-4">
+                    {planCard.icon}
+                    <h3 className="text-base font-bold text-white">{planCard.name}</h3>
+                  </div>
 
-              <p className="text-slate-400 text-xs mb-6 flex-grow-0">{planCard.description}</p>
+                  <p className="text-slate-400 text-xs mb-6 font-light leading-relaxed">{planCard.description}</p>
 
-              <div className="flex items-baseline text-white mb-6">
-                <span className="text-4xl font-extrabold font-heading">{planCard.price}</span>
-                {planCard.period && (
-                  <span className="text-sm font-medium text-slate-400 ml-1">
-                    {planCard.period === 'one-time' ? (
-                      <span className="text-[10px] uppercase font-mono tracking-wider font-semibold bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded text-amber-400">
-                        One-Time
+                  <div className="flex items-baseline text-white mb-6">
+                    <span className="text-3xl font-extrabold font-sans tracking-tight">{planCard.price}</span>
+                    {planCard.period && (
+                      <span className="text-xs font-mono text-slate-500 ml-1.5 uppercase tracking-wide">
+                        {planCard.period === 'one-time' ? (
+                          <span className="text-[9px] bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded text-amber-400 font-bold">
+                            One-Time
+                          </span>
+                        ) : (
+                          planCard.period
+                        )}
                       </span>
-                    ) : (
-                      planCard.period
                     )}
-                  </span>
-                )}
+                  </div>
+
+                  {/* Feature List */}
+                  <ul className="space-y-3 mb-8">
+                    {planCard.features.map((feature, i) => (
+                      <li key={i} className="flex items-start gap-2.5 text-xs">
+                        {feature.included ? (
+                          <Check size={13} className="text-cyan-400 mt-0.5 shrink-0" />
+                        ) : (
+                          <X size={13} className="text-slate-600 mt-0.5 shrink-0" />
+                        )}
+                        <span className={feature.included ? 'text-slate-200 font-light' : 'text-slate-500 line-through font-light'}>
+                          {feature.text}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                <button
+                  disabled={isDisabled}
+                  onClick={() => handleAction(planCard.id)}
+                  className={`w-full py-3.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition duration-300 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer ${planCard.ctaClass}`}
+                >
+                  {isProcessing && (planCard.id !== 'free' && currentPlan !== planCard.id) ? (
+                    <Loader className="animate-spin" size={14} />
+                  ) : (
+                    buttonText
+                  )}
+                </button>
               </div>
-
-              {/* Feature List */}
-              <ul className="space-y-3.5 mb-8 flex-grow">
-                {planCard.features.map((feature, i) => (
-                  <li key={i} className="flex items-start gap-2.5 text-xs">
-                    {feature.included ? (
-                      <Check size={14} className="text-cyan-400 mt-0.5 shrink-0" />
-                    ) : (
-                      <X size={14} className="text-slate-600 mt-0.5 shrink-0" />
-                    )}
-                    <span className={feature.included ? 'text-slate-200' : 'text-slate-500 line-through'}>
-                      {feature.text}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-
-              <button
-                disabled={isDisabled}
-                onClick={() => handleAction(planCard.id)}
-                className={`w-full py-3 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed ${planCard.ctaClass}`}
-              >
-                {isProcessing && (planCard.id !== 'free' && currentPlan !== planCard.id) ? (
-                  <Loader className="animate-spin" size={14} />
-                ) : (
-                  buttonText
-                )}
-              </button>
-            </motion.div>
+            </div>
           );
         })}
       </div>
 
       {/* Detailed Comparison Table */}
-      <div className="max-w-4xl mx-auto mb-24 overflow-x-auto">
-        <h2 className="text-2xl font-heading font-bold text-center mb-8">Compare All Plans</h2>
-        <table className="w-full border-collapse border border-white/5 bg-white/5 rounded-xl backdrop-blur-xl">
+      <div className="max-w-4xl mx-auto mb-24 overflow-x-auto relative z-10 border border-white/5 bg-[#08080a]/60 backdrop-blur-md rounded-2xl p-6">
+        <h2 className="text-xl font-bold text-center mb-8">Feature Comparison</h2>
+        <table className="w-full border-collapse">
           <thead>
-            <tr className="border-b border-white/10 bg-white/5">
-              <th className="p-4 text-left font-heading text-sm text-slate-400">Features</th>
-              <th className="p-4 text-center font-heading text-sm text-slate-200">Free</th>
-              <th className="p-4 text-center font-heading text-sm text-cyan-400">Pro</th>
-              <th className="p-4 text-center font-heading text-sm text-amber-400">Lifetime</th>
+            <tr className="border-b border-white/5">
+              <th className="pb-4 text-left font-mono text-[9px] text-slate-500 uppercase tracking-widest">Plan Options</th>
+              <th className="pb-4 text-center font-mono text-[9px] text-slate-300 uppercase tracking-widest">Free</th>
+              <th className="pb-4 text-center font-mono text-[9px] text-cyan-400 uppercase tracking-widest">Pro</th>
+              <th className="pb-4 text-center font-mono text-[9px] text-amber-400 uppercase tracking-widest">Lifetime</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-white/5 text-xs text-slate-300">
+          <tbody className="divide-y divide-white/5 text-xs text-slate-300 font-light">
             <tr>
-              <td className="p-4 font-medium text-white">Active Portfolios</td>
-              <td className="p-4 text-center">1</td>
-              <td className="p-4 text-center">Up to 5</td>
-              <td className="p-4 text-center font-semibold">Unlimited</td>
+              <td className="py-4 font-medium text-white">Active Deployed Portfolios</td>
+              <td className="py-4 text-center">1</td>
+              <td className="py-4 text-center">Up to 5</td>
+              <td className="py-4 text-center font-semibold">Unlimited</td>
             </tr>
             <tr>
-              <td className="p-4 font-medium text-white">Hosting Duration</td>
-              <td className="p-4 text-center">7 Days</td>
-              <td className="p-4 text-center">While Subscribed</td>
-              <td className="p-4 text-center font-semibold text-amber-400">Permanent</td>
+              <td className="py-4 font-medium text-white">Hosting Duration</td>
+              <td className="py-4 text-center text-slate-500">7 Days</td>
+              <td className="py-4 text-center">Subscription Active</td>
+              <td className="py-4 text-center font-semibold text-amber-400">Permanent</td>
             </tr>
             <tr>
-              <td className="p-4 font-medium text-white">Source Code Export</td>
-              <td className="p-4 text-center"><X size={14} className="mx-auto text-slate-600" /></td>
-              <td className="p-4 text-center"><Check size={14} className="mx-auto text-cyan-400" /></td>
-              <td className="p-4 text-center"><Check size={14} className="mx-auto text-amber-400" /></td>
+              <td className="py-4 font-medium text-white">Source Code Export</td>
+              <td className="py-4 text-center"><X size={14} className="mx-auto text-slate-600" /></td>
+              <td className="py-4 text-center"><Check size={14} className="mx-auto text-cyan-400" /></td>
+              <td className="py-4 text-center"><Check size={14} className="mx-auto text-amber-400" /></td>
             </tr>
             <tr>
-              <td className="p-4 font-medium text-white">Public Shareable Link</td>
-              <td className="p-4 text-center"><Check size={14} className="mx-auto text-cyan-400" /></td>
-              <td className="p-4 text-center"><Check size={14} className="mx-auto text-cyan-400" /></td>
-              <td className="p-4 text-center"><Check size={14} className="mx-auto text-cyan-400" /></td>
+              <td className="py-4 font-medium text-white">Public Shareable Link</td>
+              <td className="py-4 text-center"><Check size={14} className="mx-auto text-cyan-400" /></td>
+              <td className="py-4 text-center"><Check size={14} className="mx-auto text-cyan-400" /></td>
+              <td className="py-4 text-center"><Check size={14} className="mx-auto text-cyan-400" /></td>
             </tr>
             <tr>
-              <td className="p-4 font-medium text-white">AI Generation Queue</td>
-              <td className="p-4 text-center">Standard</td>
-              <td className="p-4 text-center font-semibold text-cyan-400">Priority</td>
-              <td className="p-4 text-center font-semibold text-amber-400">Priority</td>
+              <td className="py-4 font-medium text-white">Custom DNS Domain Bind</td>
+              <td className="py-4 text-center"><X size={14} className="mx-auto text-slate-600" /></td>
+              <td className="py-4 text-center"><Check size={14} className="mx-auto text-cyan-400" /></td>
+              <td className="py-4 text-center"><Check size={14} className="mx-auto text-amber-400" /></td>
             </tr>
             <tr>
-              <td className="p-4 font-medium text-white">Future System Updates</td>
-              <td className="p-4 text-center"><X size={14} className="mx-auto text-slate-600" /></td>
-              <td className="p-4 text-center">During subscription</td>
-              <td className="p-4 text-center font-semibold text-amber-400">Lifetime access</td>
+              <td className="py-4 font-medium text-white">AI Generation Queue</td>
+              <td className="py-4 text-center">Standard</td>
+              <td className="py-4 text-center text-cyan-400 font-mono text-[10px]">PRIORITY</td>
+              <td className="py-4 text-center text-amber-400 font-mono text-[10px]">PRIORITY</td>
             </tr>
           </tbody>
         </table>
       </div>
 
       {/* FAQ Section */}
-      <div className="max-w-3xl mx-auto">
-        <h2 className="text-2xl font-heading font-bold text-center mb-8">Frequently Asked Questions</h2>
-        <div className="space-y-4">
+      <div className="max-w-3xl mx-auto relative z-10">
+        <h2 className="text-xl font-bold text-center mb-8">Frequently Asked Questions</h2>
+        <div className="space-y-3">
           {faqData.map((faq, index) => (
-            <div key={index} className="rounded-xl border border-white/5 bg-white/5 backdrop-blur-xl overflow-hidden">
+            <div key={index} className="rounded-xl border border-white/5 bg-[#08080a]/60 backdrop-blur-md overflow-hidden">
               <button
                 onClick={() => toggleFaq(index)}
-                className="w-full flex items-center justify-between p-5 text-left text-sm font-semibold hover:bg-white/5 transition"
+                className="w-full flex items-center justify-between p-5 text-left text-xs md:text-sm font-semibold hover:bg-white/[0.02] transition"
               >
                 <span>{faq.question}</span>
-                {activeFaq === index ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                {activeFaq === index ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
               </button>
               {activeFaq === index && (
-                <div className="px-5 pb-5 text-xs text-slate-400 leading-relaxed border-t border-white/5 pt-3">
+                <div className="px-5 pb-5 text-xs text-slate-400 leading-relaxed border-t border-white/5 pt-3 font-light">
                   {faq.answer}
                 </div>
               )}

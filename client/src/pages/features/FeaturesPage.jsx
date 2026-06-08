@@ -1,180 +1,148 @@
-import React from 'react';
-import { motion } from 'framer-motion';
 import { 
   Zap, 
   Cpu, 
   Layout, 
   Globe, 
-  MessageSquare, 
-  Sparkles,
-  Shield,
-  Smartphone,
-  Code
+  MessageSquareCode, 
+  Braces,
+  Database
 } from 'lucide-react';
 
-const FeatureCard = ({ icon: Icon, title, description, delay }) => (
-  <motion.div
-    initial={{ opacity: 0, y: 20 }}
-    whileInView={{ opacity: 1, y: 0 }}
-    viewport={{ once: true }}
-    transition={{ delay, duration: 0.5 }}
-    className="group p-8 rounded-2xl bg-white/[0.02] border border-white/10 hover:border-cyan-500/30 hover:bg-white/[0.04] transition-all duration-300"
-  >
-    <div className="w-12 h-12 rounded-xl bg-cyan-500/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-      <Icon className="w-6 h-6 text-cyan-400" />
+
+const FeatureCard = ({ icon: Icon, title, description }) => (
+  <div className="reveal-card h-full">
+    <div className="group p-8 rounded-2xl bg-[#08080a]/60 backdrop-blur-md border border-white/5 hover:border-white/10 hover:bg-[#0c0c0e]/80 hover:scale-[1.01] hover:shadow-[0_15px_40px_rgba(0,0,0,0.3)] transition-all duration-300 flex flex-col justify-between h-full">
+      <div>
+        <div className="w-10 h-10 rounded-xl bg-white/[0.02] border border-white/5 flex items-center justify-center mb-6 group-hover:text-cyan-400 group-hover:bg-cyan-500/5 group-hover:border-cyan-500/10 transition-all duration-300 text-slate-400">
+          <Icon className="w-5 h-5" />
+        </div>
+        <h3 className="text-base font-bold text-white mb-2">{title}</h3>
+        <p className="text-slate-400 text-xs md:text-sm leading-relaxed font-light">
+          {description}
+        </p>
+      </div>
+      
+      <div className="mt-4 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity font-mono text-[9px] text-cyan-400 uppercase tracking-widest">
+        <span>Active integration</span>
+        <span>→</span>
+      </div>
     </div>
-    <h3 className="text-xl font-bold text-white mb-3">{title}</h3>
-    <p className="text-gray-400 leading-relaxed text-sm">
-      {description}
-    </p>
-  </motion.div>
+  </div>
 );
 
 const FeaturesPage = () => {
   const mainFeatures = [
     {
       icon: Cpu,
-      title: "AI Resume Parsing",
-      description: "Our Groq-powered engine extracts work history, skills, and achievements from PDF, DOCX, or even LinkedIn exports with 99% accuracy.",
-      delay: 0.1
+      title: "ATS-Optimized Parsing",
+      description: "Our Llama-3 extraction pipeline parses PDFs, Word docs, and LinkedIn profiles, automatically organizing your accomplishments and project metrics."
     },
     {
-      icon: MessageSquare,
-      title: "AI Chat Modifier",
-      description: "Don't like a section? Just tell the AI. 'Make my project descriptions more technical' or 'Add a dark theme with neon accents'.",
-      delay: 0.2
+      icon: MessageSquareCode,
+      title: "Interactive Recruiter Chatbot",
+      description: "A customized chatbot widget integrated directly on your site, pre-loaded with your background, to answer recruiter questions about your projects and availability 24/7."
     },
     {
       icon: Layout,
-      title: "AI-Generated Design",
-      description: "A premium, developer-focused design system tailored to make you stand out. Fully responsive, pixel-perfect, and SEO optimized out of the box.",
-      delay: 0.3
+      title: "Volumetric Design System",
+      description: "Compiles your data into a premium responsive portfolio structure. Features live project cards, smooth animations, and high-end modern layout tokens."
     },
     {
       icon: Globe,
-      title: "Instant Deployment",
-      description: "Go live in seconds on a sub-domain like profil.io/yourname. One-click updates whenever you want to change your content.",
-      delay: 0.4
+      title: "Instant Edge Deployment",
+      description: "Go live instantly to a high-speed CDN global subdomain (e.g. profilio.app/username). Features automatic SSL configuration and search index optimizations."
     },
     {
-      icon: Code,
-      title: "IDE-Grade Editor",
-      description: "For the control freaks: A full JSON editor with live preview. Change data structures directly and see updates instantly.",
-      delay: 0.5
+      icon: Braces,
+      title: "IDE-Grade JSON Editor",
+      description: "Direct read-write access to your portfolio's underlying JSON data schema. Change properties and see hot-reloaded visual updates in real-time."
     },
     {
-      icon: Sparkles,
-      title: "Content Enhancement",
-      description: "Our AI doesn't just copy; it improves. It fixes grammar, strengthens action verbs, and highlights your most impactful work.",
-      delay: 0.6
+      icon: Database,
+      title: "GitHub & LeetCode Sync",
+      description: "Connect your profiles to automatically pull live repository languages, commit graphs, open source details, and competitive programming progress grids."
     }
   ];
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] pt-32 pb-20 px-4">
-      <div className="max-w-7xl mx-auto">
-        {/* Hero Section */}
+    <div className="min-h-screen bg-[#030304] pt-32 pb-20 px-6 sm:px-8 lg:px-16 relative overflow-hidden">
+      
+      {/* Background Grid Accent */}
+      <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.015)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.015)_1px,transparent_1px)] bg-[size:100px_100px] pointer-events-none opacity-30" />
+      
+      <div className="max-w-7xl mx-auto relative z-10">
+        
+        {/* Header Section */}
         <div className="text-center mb-24">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5 }}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-xs font-bold tracking-widest uppercase mb-6"
-          >
+          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/[0.02] border border-white/5 text-cyan-400 font-mono text-[10px] tracking-widest uppercase mb-6">
             <Zap className="w-3 h-3" />
-            Core Capabilities
-          </motion.div>
-          <motion.h1 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1, duration: 0.5 }}
-            className="text-4xl md:text-6xl font-black text-white tracking-tighter mb-6"
-          >
-            Built for the <span className="gradient-text">Modern Developer</span>
-          </motion.h1>
-          <motion.p 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2, duration: 0.5 }}
-            className="text-gray-400 text-lg md:text-xl max-w-2xl mx-auto font-light leading-relaxed"
-          >
-            Everything you need to build, customize, and deploy a world-class portfolio in minutes, not days.
-          </motion.p>
+            <span>Capability Index</span>
+          </div>
+          
+          <h1 className="text-4xl md:text-6xl font-semibold text-white tracking-tighter mb-6 leading-none reveal-text">
+            Engineered for the <span className="gradient-text">modern developer</span>.
+          </h1>
+          
+          <p className="text-slate-400 text-base md:text-lg max-w-xl mx-auto font-light leading-relaxed font-sans reveal-text">
+            A high-performance pipeline automating portfolio synthesis, API syncing, and deployment.
+          </p>
         </div>
 
         {/* Features Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-36 reveal-container">
           {mainFeatures.map((feature, index) => (
             <FeatureCard key={index} {...feature} />
           ))}
         </div>
 
-        {/* Detailed Feature: AI Analysis */}
-        <div className="mt-40 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-          <motion.div
-            initial={{ opacity: 0, x: -30 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-          >
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">Deep Context AI Analysis</h2>
-            <p className="text-gray-400 leading-relaxed mb-8">
-              We don't just use regex. Our integration with Llama 3 on Groq allows us to understand the *context* of your experience. 
+        {/* Deep Dive Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center pt-20 border-t border-white/5 reveal-container">
+          <div className="flex flex-col reveal-card">
+            <div className="mono-label mb-4">[DEEP DIVE / DATA COMPILATION]</div>
+            <h2 className="text-3xl md:text-4xl font-semibold text-white mb-6 tracking-tighter">
+              Context-Aware Parsing
+            </h2>
+            <p className="text-slate-400 text-sm md:text-base leading-relaxed mb-8 font-light">
+              Rather than generic text splitting, our Groq-Llama-3 pipeline evaluates the semantic context of your projects and job history, restructuring descriptions into high-impact, ATS-optimized bullet points.
             </p>
             <ul className="space-y-4">
               {[
-                "Automatic project categorization",
-                "Skills extraction from achievement bullets",
-                "Grammar & professional tone optimization",
-                "Semantic mapping to portfolio sections"
+                "Automatic skill-to-project semantic mapping",
+                "Action verb enhancement for job descriptions",
+                "ATS-friendly keyword optimization",
+                "Self-adjusting typography layouts based on content density"
               ].map((item, i) => (
-                <li key={i} className="flex items-center gap-3 text-gray-300">
-                  <div className="w-1.5 h-1.5 rounded-full bg-cyan-500" />
-                  {item}
+                <li key={i} className="flex items-center gap-3 text-slate-300 text-xs md:text-sm">
+                  <div className="w-1.5 h-1.5 rounded-full bg-cyan-500 shrink-0" />
+                  <span>{item}</span>
                 </li>
               ))}
             </ul>
-          </motion.div>
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.9 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
-            className="relative group"
-          >
-            <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500 to-purple-600 rounded-2xl blur opacity-20 group-hover:opacity-40 transition duration-1000"></div>
-            <div className="relative bg-[#111] border border-white/10 p-8 rounded-2xl">
+          </div>
+          
+          <div className="relative group reveal-card">
+            <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500 to-indigo-500 rounded-2xl blur opacity-10 group-hover:opacity-25 transition duration-1000"></div>
+            <div className="relative bg-[#08080a] border border-white/5 p-8 rounded-2xl">
               <div className="flex items-center gap-2 mb-6">
-                <div className="w-3 h-3 rounded-full bg-red-500/50" />
-                <div className="w-3 h-3 rounded-full bg-amber-500/50" />
-                <div className="w-3 h-3 rounded-full bg-emerald-500/50" />
-                <span className="ml-2 text-[10px] font-mono text-gray-500 uppercase tracking-widest">AI Extraction.log</span>
+                <div className="w-2.5 h-2.5 rounded-full bg-red-500/30" />
+                <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/30" />
+                <div className="w-2.5 h-2.5 rounded-full bg-green-500/30" />
+                <span className="ml-2 text-[9px] font-mono text-slate-600 uppercase tracking-widest">parsing_logger.log</span>
               </div>
-              <div className="space-y-4 font-mono text-sm leading-relaxed">
-                <p className="text-emerald-400"># Initializing Groq-Llama-3-70b...</p>
-                <p className="text-cyan-400"># Parsing "Fullstack_Dev_Resume.pdf"</p>
+              <div className="space-y-4 font-mono text-[11px] md:text-xs leading-relaxed">
+                <p className="text-cyan-400"># Initializing Groq-Llama-3-70b...</p>
+                <p className="text-slate-500"># Scanning source "resume.pdf"</p>
                 <div className="pl-4 border-l border-white/5 space-y-2">
-                  <p className="text-gray-400">{">"} Identifying experience: <span className="text-purple-400">Software Engineer @ Google</span></p>
-                  <p className="text-gray-400">{">"} Extracting stack: <span className="text-amber-400">React, Go, K8s, GraphQL</span></p>
-                  <p className="text-gray-400">{">"} Generating bio: <span className="text-white italic">"Experienced architect with a focus on..."</span></p>
+                  <p className="text-slate-400">{">"} Job found: <span className="text-indigo-400">Software Engineer @ TechFlow</span></p>
+                  <p className="text-slate-400">{">"} Stack mapping: <span className="text-cyan-400">React, Node.js, TypeScript</span></p>
+                  <p className="text-slate-400">{">"} Optimizing bullets: <span className="text-emerald-400">Replaced passive verbs with metrics-driven statements</span></p>
                 </div>
-                <p className="text-cyan-400 animate-pulse"># Compiling Design: Profilio V1 Dark...</p>
+                <p className="text-emerald-400"># Compiled profile schema v1.2 successfully</p>
               </div>
             </div>
-          </motion.div>
-        </div>
-
-        {/* Tech Stack Bar */}
-        <div className="mt-40 pt-20 border-t border-white/5">
-          <p className="text-center text-gray-500 text-sm font-mono tracking-widest uppercase mb-12">Powered by Modern Tech</p>
-          <div className="flex flex-wrap justify-center gap-12 opacity-50 grayscale hover:grayscale-0 transition-all duration-500">
-             {/* We can put logos or text here */}
-             <span className="text-xl font-bold text-white">Groq AI</span>
-             <span className="text-xl font-bold text-white">React 18</span>
-             <span className="text-xl font-bold text-white">Cloudinary</span>
-             <span className="text-xl font-bold text-white">TailwindCSS</span>
-             <span className="text-xl font-bold text-white">Framer Motion</span>
           </div>
         </div>
+
       </div>
     </div>
   );

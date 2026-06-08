@@ -7,12 +7,10 @@ import {
   Code2, 
   Eye, 
   Settings,
-  PanelLeftClose,
   PanelRightClose,
   Sparkles,
   Edit2,
   Loader2,
-  LayoutGrid,
   GripVertical,
   Monitor,
   Tablet,
@@ -24,7 +22,6 @@ import {
   ExternalLink,
   RefreshCw,
   ChevronDown,
-  User,
   LayoutDashboard,
   LogOut,
 } from 'lucide-react';
@@ -383,7 +380,7 @@ const Editor = () => {
       return 'th';
     };
 
-    let rawCode = '';
+    let rawCode;
     // Prefer fullPreviewHtml from assembler (includes proper CDN injection)
     if (project.fullPreviewHtml) {
       rawCode = project.fullPreviewHtml;
@@ -396,9 +393,13 @@ const Editor = () => {
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <base href="/" target="_self" />
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Lexend:wght@100..900&family=Plus+Jakarta+Sans:ital,wght@0,100..800;1,100..800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/devicons/devicon@v2.15.1/devicon.min.css" />
-  <script src="https://cdn.tailwindcss.com"><\/script>
+  <script src="https://cdn.tailwindcss.com"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; }
     body { margin: 0; padding: 0; }
@@ -430,7 +431,7 @@ const Editor = () => {
 </head>
 <body>
   ${html}
-  <script>(function(){'use strict'; ${js} })();<\/script>
+  <script>(function(){'use strict'; ${js} })();</script>
 </body>
 </html>`;
     }
@@ -743,7 +744,7 @@ const Editor = () => {
         {/* Left Sidebar: AI Chat + Section Regenerator */}
         <aside 
           style={(isPreviewCollapsed && viewMode === 'visual') ? {} : { width: `${sidebarWidth}px` }} 
-          className={`border-r border-white/5 flex flex-col bg-[#0a0a0a] ${(isPreviewCollapsed && viewMode === 'visual') ? 'flex-1 w-full animate-in slide-in-from-right-4 duration-300' : 'shrink-0'}`}
+          className={`border-r border-white/5 flex flex-col min-h-0 bg-[#0a0a0a] ${(isPreviewCollapsed && viewMode === 'visual') ? 'flex-1 w-full animate-in slide-in-from-right-4 duration-300' : 'shrink-0'}`}
         >
           {/* Sidebar Tab Bar */}
           <div className="p-3 border-b border-white/5">
@@ -785,7 +786,7 @@ const Editor = () => {
           {/* Chat Panel */}
           {sidebarTab === 'chat' && (
             <>
-              <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
+              <div data-lenis-prevent className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
                 <div className={`space-y-4 ${isPreviewCollapsed ? 'max-w-4xl mx-auto w-full px-4 md:px-8' : ''}`}>
                   {chatMessages.map((msg, i) => (
                     <div 
@@ -842,7 +843,7 @@ const Editor = () => {
 
           {/* Section Regenerator Panel */}
           {sidebarTab === 'sections' && (
-            <div className={`flex-1 overflow-y-auto p-4 ${isPreviewCollapsed ? 'max-w-4xl mx-auto w-full px-4 md:px-8' : ''}`}>
+            <div data-lenis-prevent className={`flex-1 overflow-y-auto p-4 ${isPreviewCollapsed ? 'max-w-4xl mx-auto w-full px-4 md:px-8' : ''}`}>
               <SectionRegenerator
                 projectId={id}
                 onRegenerate={handleSectionRegenerate}
@@ -867,7 +868,7 @@ const Editor = () => {
           <>
             <main 
               style={isPreviewCollapsed ? {} : { width: `${editorWidth}px` }} 
-              className={`flex flex-col border-r border-white/5 bg-[#0a0a0a] animate-in fade-in slide-in-from-left-4 duration-300 ${isPreviewCollapsed ? 'flex-1 w-full' : 'shrink-0'}`}
+              className={`flex flex-col min-h-0 border-r border-white/5 bg-[#0a0a0a] animate-in fade-in slide-in-from-left-4 duration-300 ${isPreviewCollapsed ? 'flex-1 w-full' : 'shrink-0'}`}
             >
               <div className="h-10 bg-[#0f0f0f] border-b border-white/5 flex items-center px-2 gap-1">
                 {['html', 'css', 'js'].map(tab => (
@@ -882,7 +883,7 @@ const Editor = () => {
                   </button>
                 ))}
               </div>
-              <div className="flex-1 font-mono text-sm p-4 overflow-auto bg-[#0d0d0d] custom-scrollbar">
+              <div data-lenis-prevent className="flex-1 font-mono text-sm p-4 overflow-auto bg-[#0d0d0d] custom-scrollbar">
                   <pre className="text-cyan-400/80 whitespace-pre-wrap selection:bg-cyan-500/20">
                     {project?.generatedCode?.[activeTab] || `// No ${activeTab.toUpperCase()} code yet.`}
                   </pre>

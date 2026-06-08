@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 // No unused react-router-dom imports
-import { Search, Loader2, ArrowLeft, ArrowRight, ShieldAlert, Award, Calendar, ExternalLink } from 'lucide-react';
+import { Search, Loader2, ArrowLeft, ArrowRight, ShieldAlert } from 'lucide-react';
 import API from '../../apis/api';
 import PlanBadge from '../../components/common/PlanBadge';
 import Notification from '../../components/common/Notification';
@@ -44,7 +44,9 @@ export const AdminUsers = () => {
   };
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchUsers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPage, planFilter]);
 
   // Debounced search query trigger
@@ -55,6 +57,7 @@ export const AdminUsers = () => {
     }, 500);
 
     return () => clearTimeout(delayDebounceFn);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchTerm]);
 
   const handleOpenPlanOverride = (user) => {

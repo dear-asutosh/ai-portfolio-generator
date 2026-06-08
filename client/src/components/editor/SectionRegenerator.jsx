@@ -11,12 +11,16 @@ import {
   Star,
   Send,
   Loader2,
+  User,
+  Menu,
 } from 'lucide-react';
 
 // ─── Section config ───────────────────────────────────────────────────────────
 
 const SECTIONS = [
+  { id: 'nav',        label: 'Navbar',     icon: Menu },
   { id: 'hero',       label: 'Hero',       icon: Star },
+  { id: 'about',      label: 'About Me',   icon: User },
   { id: 'skills',     label: 'Skills',     icon: TrendingUp },
   { id: 'projects',   label: 'Projects',   icon: Layout },
   { id: 'experience', label: 'Experience', icon: RefreshCw },
@@ -198,7 +202,6 @@ const SectionRegenerator = ({ projectId, onRegenerate, disabled }) => {
                   <div className="grid grid-cols-2 gap-1.5">
                     {QUICK_ACTIONS.map((action) => {
                       const ActionIcon = action.icon;
-                      const isThisRegenerating = isRegenerating;
                       return (
                         <button
                           key={action.label}

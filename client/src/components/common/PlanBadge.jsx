@@ -1,4 +1,4 @@
-import React from 'react';
+
 import { Sparkles, Crown } from 'lucide-react';
 
 export const PlanBadge = ({ plan = 'free', size = 'md' }) => {

@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Check, ShieldCheck, Sparkles, Zap, Loader, CreditCard, AlertCircle } from 'lucide-react';
+import { Check, ShieldCheck, Loader, CreditCard } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useSubscription } from '../../context/SubscriptionContext';
 import { useRazorpay } from '../../hooks/useRazorpay';

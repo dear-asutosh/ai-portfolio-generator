@@ -7,7 +7,6 @@ import {
   ArrowLeft, 
   Upload, 
   Sparkles,
-  Layout,
   CheckCircle2,
   Info,
   X,
@@ -26,6 +25,8 @@ import Navbar from '../../components/layout/Navbar';
 import Footer from '../../components/layout/Footer';
 import API from '../../apis/api';
 import routes from '../../routes';
+import Notification from '../../components/common/Notification';
+import UpgradeModal from '../../components/common/UpgradeModal';
 
 
 
@@ -137,6 +138,11 @@ const ProjectSetup = () => {
   });
 
   const [skillInput, setSkillInput] = useState('');
+  const [githubUsername, setGithubUsername] = useState('');
+
+  const [notification, setNotification] = useState(null);
+  const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
+  const [upgradeModalMessage, setUpgradeModalMessage] = useState('');
 
   const methods = [
     {
@@ -145,6 +151,13 @@ const ProjectSetup = () => {
       description: 'Upload your PDF resume and let AI extract your experience.',
       icon: <FileText size={32} className="text-cyan-400" />,
       color: 'cyan'
+    },
+    {
+      id: 'github',
+      title: 'Sync from GitHub',
+      description: 'Import your repositories, pinned projects, and profile details.',
+      icon: <FolderGit2 size={32} className="text-emerald-400" />,
+      color: 'emerald'
     },
     {
       id: 'linkedin',
@@ -208,7 +221,7 @@ const ProjectSetup = () => {
     if (selectedFile && allowedTypes.includes(selectedFile.type)) {
       setFile(selectedFile);
     } else {
-      alert('Please upload a PDF, DOCX, or Image file.');
+      setNotification({ type: 'warning', message: 'Please upload a PDF, DOCX, or Image file.' });
     }
   };
 
@@ -295,7 +308,7 @@ const ProjectSetup = () => {
   // Experience Managers
   const saveExperience = () => {
     if (!tempExperience.title.trim() || !tempExperience.company.trim()) {
-      alert("Please enter both job title and company name.");
+      setNotification({ type: 'warning', message: 'Please enter both job title and company name.' });
       return;
     }
     setManualData(prev => {
@@ -328,7 +341,7 @@ const ProjectSetup = () => {
   // Projects Managers
   const saveProject = () => {
     if (!tempProject.title.trim()) {
-      alert("Please enter a project title.");
+      setNotification({ type: 'warning', message: 'Please enter a project title.' });
       return;
     }
     setManualData(prev => {
@@ -379,7 +392,7 @@ const ProjectSetup = () => {
   // Education Managers
   const saveEducation = () => {
     if (!tempEducation.degree.trim() || !tempEducation.school.trim()) {
-      alert("Please enter both degree and school/university name.");
+      setNotification({ type: 'warning', message: 'Please enter both degree and school/university name.' });
       return;
     }
     setManualData(prev => {
@@ -411,27 +424,32 @@ const ProjectSetup = () => {
 
   const handleStepNext = async () => {
     if (!projectName.trim()) {
-      alert('Please enter a project name.');
+      setNotification({ type: 'warning', message: 'Please enter a project name.' });
       return;
     }
     if (!targetRole.trim()) {
-      alert('Please enter a target role.');
+      setNotification({ type: 'warning', message: 'Please enter a target role.' });
       return;
     }
     
-    if (method !== 'manual' && !file) {
-      alert('Please upload your resume file.');
+    if (method !== 'manual' && method !== 'github' && !file) {
+      setNotification({ type: 'warning', message: 'Please upload your resume file.' });
+      return;
+    }
+
+    if (method === 'github' && !githubUsername.trim()) {
+      setNotification({ type: 'warning', message: 'Please enter your GitHub username.' });
       return;
     }
 
     if (method === 'manual') {
       if (!manualData.personalInfo.name.trim()) {
-        alert('Please fill out your name in the Profile section.');
+        setNotification({ type: 'warning', message: 'Please fill out your name in the Profile section.' });
         setManualTab('profile');
         return;
       }
       if (!manualData.personalInfo.bio.trim()) {
-        alert('Please write a brief summary in the Profile section.');
+        setNotification({ type: 'warning', message: 'Please write a brief summary in the Profile section.' });
         setManualTab('profile');
         return;
       }
@@ -447,6 +465,14 @@ const ProjectSetup = () => {
 
       if (method === 'manual') {
         finalContent = manualData;
+      } else if (method === 'github') {
+        const syncRes = await API.post('/ai/import-github', {
+          username: githubUsername.trim()
+        });
+
+        if (syncRes.data.success) {
+          finalContent = syncRes.data.data;
+        }
       } else if (file && (method === 'resume' || method === 'linkedin')) {
         const formData = new FormData();
         formData.append('resume', file);
@@ -469,7 +495,15 @@ const ProjectSetup = () => {
       }
     } catch (err) {
       console.error('Error creating project:', err);
-      alert(err.response?.data?.message || 'Failed to create project. Please try again.');
+      const errMsg = err.response?.data?.error || err.response?.data?.message || 'Failed to create project. Please try again.';
+      
+      // Check if it's a plan limit block
+      if (err.response?.status === 403 && (errMsg.toLowerCase().includes('limit') || errMsg.toLowerCase().includes('block') || errMsg.toLowerCase().includes('portfolio'))) {
+        setUpgradeModalMessage(errMsg);
+        setIsUpgradeModalOpen(true);
+      } else {
+        setNotification({ type: 'error', message: errMsg });
+      }
     } finally {
       setLoading(false);
     }
@@ -561,7 +595,58 @@ const ProjectSetup = () => {
 
             <div className="bg-[#111] border border-white/5 rounded-3xl p-6 md:p-10 shadow-2xl relative overflow-hidden">
               
-              {method !== 'manual' ? (
+              {method === 'github' ? (
+                // GitHub + LeetCode Flow
+                <div className="space-y-8 animate-in fade-in duration-300">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <label className="text-xs uppercase tracking-widest text-gray-500 font-bold">Project Name</label>
+                      <input 
+                        type="text" 
+                        value={projectName}
+                        onChange={(e) => setProjectName(e.target.value)}
+                        placeholder="e.g. Senior Frontend Engineer Portfolio"
+                        className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/30 transition-all text-white placeholder-gray-650"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-xs uppercase tracking-widest text-gray-500 font-bold">Target Role</label>
+                      <input 
+                        type="text" 
+                        value={targetRole}
+                        onChange={(e) => setTargetRole(e.target.value)}
+                        placeholder="e.g. Full Stack Engineer"
+                        className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/30 transition-all text-white placeholder-gray-650"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-xs uppercase tracking-widest text-emerald-400 font-bold">GitHub Username *</label>
+                    <input 
+                      type="text" 
+                      value={githubUsername}
+                      onChange={(e) => {
+                        setGithubUsername(e.target.value);
+                        if (!projectName && e.target.value) {
+                          setProjectName(`${e.target.value}'s Developer Portfolio`);
+                        }
+                      }}
+                      placeholder="e.g. octocat"
+                      className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/30 transition-all text-white placeholder-gray-650 font-mono"
+                    />
+                  </div>
+
+                  <button 
+                    onClick={handleStepNext}
+                    disabled={!githubUsername.trim() || loading}
+                    className="w-full mt-12 bg-emerald-500 hover:bg-emerald-600 text-black font-bold py-4 rounded-2xl transition-all transform hover:scale-[1.01] active:scale-[0.99] flex items-center justify-center gap-2 disabled:opacity-50 disabled:transform-none shadow-lg"
+                  >
+                    {loading ? <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin"></div> : <Sparkles size={20} />}
+                    {loading ? 'AI is building your stunning developer portfolio...' : 'Generate My Portfolio'}
+                  </button>
+                </div>
+              ) : method !== 'manual' ? (
                 // Resume / LinkedIn Flow
                 <div className="space-y-8">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -1309,6 +1394,25 @@ const ProjectSetup = () => {
       </main>
 
       <Footer />
+
+      {/* Upgrade Modal */}
+      <UpgradeModal
+        isOpen={isUpgradeModalOpen}
+        onClose={() => setIsUpgradeModalOpen(false)}
+        title="Portfolio Limit Reached"
+        message={upgradeModalMessage}
+      />
+
+      {/* Toast Notification */}
+      {notification && (
+        <div className="fixed top-24 right-6 z-50">
+          <Notification
+            type={notification.type}
+            message={notification.message}
+            onClose={() => setNotification(null)}
+          />
+        </div>
+      )}
     </div>
   );
 };

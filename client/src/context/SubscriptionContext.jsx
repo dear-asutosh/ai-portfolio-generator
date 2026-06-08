@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useAuth } from './AuthContext';
 import api from '../apis/api';
@@ -31,6 +32,7 @@ export const SubscriptionProvider = ({ children }) => {
 
   useEffect(() => {
     if (user) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       fetchStatus();
     } else {
       // Reset when logged out

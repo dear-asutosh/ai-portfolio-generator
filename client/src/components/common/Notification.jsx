@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { CheckCircle2, AlertCircle, AlertTriangle, Info, X, Sparkles } from 'lucide-react';
 
@@ -14,6 +14,7 @@ const Notification = ({
 
   useEffect(() => {
     if (!message) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsExiting(false);
 
     if (autoClose) {
