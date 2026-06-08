@@ -72,7 +72,7 @@ const projects = require('./routes/projects');
 const ai = require('./routes/aiRoutes');
 const subscription = require('./routes/subscriptionRoutes');
 const admin = require('./routes/adminRoutes');
-const cron = require('./routes/cronRoutes');
+
 const payments = require('./routes/paymentRoutes');
 
 // Basic Route
@@ -86,7 +86,7 @@ app.use('/api/projects', projects);
 app.use('/api/ai', ai);
 app.use('/api/subscription', subscription);
 app.use('/api/admin', admin);
-app.use('/api/cron', cron);
+
 app.use('/api', payments);
 
 // Health Check Route
