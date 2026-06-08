@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&family=Zilla+Slab:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -11,7 +11,7 @@
   body {
     background-color: #0a0a0a;
     color: #ffffff;
-    font-family: 'Zilla Slab', serif;
+    font-family: 'Plus Jakarta Sans', sans-serif;
     background-image: 
       linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
       linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
@@ -47,6 +47,18 @@
     -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
     mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
   }
+  .perspective-1000 {
+    perspective: 1000px;
+  }
+  .preserve-3d {
+    transform-style: preserve-3d;
+  }
+  .backface-hidden {
+    backface-visibility: hidden;
+  }
+  .transform-3d {
+    transform: translateZ(50px);
+  }
 }
 
 /* Custom Slim Scrollbar */
@@ -55,17 +67,17 @@
 }
 
 ::-webkit-scrollbar-track {
-  background: #0a0a0a;
+  background: #030303;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #262626;
+  background: #1a1a1a;
   border-radius: 10px;
-  border: 1px solid #0a0a0a;
+  border: 1px solid #030303;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #404040;
+  background: #333333;
 }
 
 /* Custom Animations */
@@ -84,8 +96,22 @@
   animation: fadeInDown 0.3s ease-out forwards;
 }
 
-/* Firefox */
+/* Custom Monospace Labels */
+.mono-label {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #8f9ba8;
+}
+
+/* Firefox scrollbar */
 * {
   scrollbar-width: thin;
-  scrollbar-color: #262626 #0a0a0a;
+  scrollbar-color: #1a1a1a #030303;
+}
+
+/* Lenis smooth scroll inner scrollable container prevent overrides */
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
 }

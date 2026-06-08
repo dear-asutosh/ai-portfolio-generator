@@ -6,7 +6,6 @@ import logo from '../../assets/images/logo.png';
 import fallbackUser from '../../assets/images/fallback-user.png';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  User, 
   LayoutDashboard, 
   Settings, 
   LogOut, 

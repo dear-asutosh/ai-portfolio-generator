@@ -23,7 +23,7 @@ export default {
         dark: "#080c18"
       },
       fontFamily: {
-        sans: ['Zilla Slab', 'serif'],
+        sans: ['Plus Jakarta Sans', 'sans-serif'],
         heading: ['Lexend', 'sans-serif'],
         mono: ['JetBrains Mono', 'Fira Code', 'monospace'],
       },
