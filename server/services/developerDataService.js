@@ -23,14 +23,19 @@ const fetchGitHubData = async (username) => {
   try {
     console.log(`[GitHub API] Fetching details for user: ${cleanUsername}`);
     
+    const headers = { 'User-Agent': 'Profilio-App' };
+    if (process.env.GITHUB_TOKEN) {
+      headers['Authorization'] = `token ${process.env.GITHUB_TOKEN}`;
+    }
+
     // Fetch profile and repos in parallel
     const [profileRes, reposRes] = await Promise.all([
       axios.get(`https://api.github.com/users/${cleanUsername}`, {
-        headers: { 'User-Agent': 'Profilio-App' },
+        headers,
         timeout: 5000
       }).catch(() => null),
       axios.get(`https://api.github.com/users/${cleanUsername}/repos?sort=updated&per_page=10`, {
-        headers: { 'User-Agent': 'Profilio-App' },
+        headers,
         timeout: 5000
       }).catch(() => null)
     ]);
@@ -38,6 +43,11 @@ const fetchGitHubData = async (username) => {
     let profile = null;
     if (profileRes && profileRes.data) {
       profile = {
+        name: profileRes.data.name,
+        company: profileRes.data.company,
+        blog: profileRes.data.blog,
+        location: profileRes.data.location,
+        email: profileRes.data.email,
         avatarUrl: profileRes.data.avatar_url,
         bio: profileRes.data.bio,
         publicRepos: profileRes.data.public_repos,

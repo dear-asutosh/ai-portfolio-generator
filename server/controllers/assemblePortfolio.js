@@ -232,19 +232,74 @@ const assemblePortfolio = ({ html, customCss, js }) => {
 const spliceSectionHtml = (fullHtml, sectionId, newSectionHtml) => {
   if (!fullHtml || !sectionId || !newSectionHtml) return fullHtml;
 
-  // Match the section element by its id attribute
+  // Find the opening tag of the section with the target id
   // Handles: <section id="hero">, <div id="hero">, <header id="hero">, etc.
-  const sectionPattern = new RegExp(
-    `(<(?:section|div|header|footer|main|article|aside|nav)[^>]*\\bid="${sectionId}"[^>]*>)([\\s\\S]*?)(<\\/(?:section|div|header|footer|main|article|aside|nav)>)`,
+  const tagTypes = "section|div|header|footer|main|article|aside|nav";
+  const openTagRegex = new RegExp(
+    `(<(${tagTypes})[^>]*\\bid=["']?${sectionId}["']?[^>]*>)`,
     "i"
   );
 
-  if (sectionPattern.test(fullHtml)) {
-    // Replace only the inner content, preserving the wrapper tag + attributes
-    return fullHtml.replace(sectionPattern, `$1\n${newSectionHtml}\n$3`);
+  const match = openTagRegex.exec(fullHtml);
+  if (match) {
+    const openTag = match[1];
+    const tagType = match[2];
+    const startIndex = match.index;
+
+    // Helper to find the matching closing tag index by tracking nesting levels
+    const findClosingTagIndex = (html, type, searchStart) => {
+      const regex = new RegExp(`<\/?${type}\\b[^>]*>`, "gi");
+      regex.lastIndex = searchStart;
+      let nestingLevel = 1;
+      let m;
+      while ((m = regex.exec(html)) !== null) {
+        const tag = m[0];
+        if (tag.startsWith("</") || tag.startsWith("</")) {
+          nestingLevel--;
+          if (nestingLevel === 0) {
+            return {
+              closeTagStart: m.index,
+              closeTagEnd: regex.lastIndex,
+              closeTag: tag,
+            };
+          }
+        } else if (!tag.endsWith("/>")) {
+          nestingLevel++;
+        }
+      }
+      return null;
+    };
+
+    const closingResult = findClosingTagIndex(fullHtml, tagType, startIndex + openTag.length);
+    if (closingResult) {
+      const { closeTagStart, closeTagEnd, closeTag } = closingResult;
+      
+      // If the new section HTML already contains a root wrapper with the target id,
+      // replace the entire matched block (opening wrapper to closing tag).
+      // Otherwise, replace only the inner content to preserve the original wrapper tag + attributes.
+      const hasOuterWrapper = new RegExp(`<\\w+[^>]*\\bid=["']?${sectionId}["']?[^>]*>`, "i").test(newSectionHtml);
+      
+      if (hasOuterWrapper) {
+        return (
+          fullHtml.substring(0, startIndex) +
+          newSectionHtml +
+          fullHtml.substring(closeTagEnd)
+        );
+      } else {
+        return (
+          fullHtml.substring(0, startIndex) +
+          openTag +
+          "\n" +
+          newSectionHtml +
+          "\n" +
+          closeTag +
+          fullHtml.substring(closeTagEnd)
+        );
+      }
+    }
   }
 
-  // Fallback: if pattern doesn't match, append to end (fail-safe)
+  // Fallback: if pattern or matching tag doesn't match, append to end (fail-safe)
   console.warn(`[Assembler] Section id="${sectionId}" not found in HTML — appending instead.`);
   return fullHtml + "\n" + newSectionHtml;
 };

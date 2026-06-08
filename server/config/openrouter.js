@@ -65,11 +65,11 @@ const getOpenRouterClient = () => {
 // Fallback 3: Gemma 4 31B — reliable free-tier safety net.
 
 const BLUEPRINT_MODELS = [
-  "moonshotai/kimi-k2.6:free",
-  "openrouter/auto",
-  "z-ai/glm-4.5-air:free",
   "google/gemma-4-31b-it:free",
-  "nvidia/z-ai/glm-5.1",
+  "z-ai/glm-4.5-air:free",
+  "moonshotai/kimi-k2.6:free",
+  "openrouter/free",
+  "openrouter/auto",
 ];
 
 // ─── Stage 2: HTML Architecture Layer ─────────────────────────────────────
@@ -85,10 +85,11 @@ const BLUEPRINT_MODELS = [
 
 const HTML_MODELS = [
   "qwen/qwen3-coder:free",
-  "deepseek/deepseek-v4-flash:free",
+  "openrouter/free",
   "meta-llama/llama-3.3-70b-instruct:free",
-  "nvidia/z-ai/glm-5.1",
-  "nvidia/bytedance/seed-oss-36b-instruct",
+  "google/gemma-4-31b-it:free",
+  "z-ai/glm-4.5-air:free",
+  "openrouter/auto",
 ];
 
 // ─── Stage 3: Visual Design System — Premium CSS Layer ────────────────────
@@ -102,9 +103,11 @@ const HTML_MODELS = [
 //       and creative training make it ideal for premium CSS effects.
 
 const CSS_MODELS = [
-  "deepseek/deepseek-v4-flash:free",
+  "nvidia/nemotron-3-super-120b-a12b:free",
+  "openrouter/free",
   "google/gemma-4-31b-it:free",
-  "nvidia/z-ai/glm-5.1",
+  "z-ai/glm-4.5-air:free",
+  "openrouter/auto",
 ];
 
 // ─── Stage 4: Interaction Engine — JavaScript Layer ───────────────────────
@@ -120,9 +123,10 @@ const CSS_MODELS = [
 
 const JS_MODELS = [
   "qwen/qwen3-coder:free",
+  "openrouter/free",
   "meta-llama/llama-3.3-70b-instruct:free",
-  "nvidia/bytedance/seed-oss-36b-instruct",
-  "nvidia/z-ai/glm-5.1",
+  "nvidia/nemotron-3-super-120b-a12b:free",
+  "openrouter/auto",
 ];
 
 // ─── Update Workflow Routing ───────────────────────────────────────────────
@@ -135,11 +139,11 @@ const JS_MODELS = [
 //   Design edits   → Nemotron   (updates CSS, animations, color system)
 //   JS edits       → Nemotron   (modifies interactions, counters, tabs)
 
-// Edit Workflow: Route to glm-5.1 as primary, followed by stage registries
-const CONTENT_EDIT_MODELS = ["nvidia/z-ai/glm-5.1", ...BLUEPRINT_MODELS.filter(m => m !== "nvidia/z-ai/glm-5.1")];
-const LAYOUT_EDIT_MODELS  = ["nvidia/z-ai/glm-5.1", ...HTML_MODELS];
-const DESIGN_EDIT_MODELS  = ["nvidia/z-ai/glm-5.1", ...CSS_MODELS];
-const JS_EDIT_MODELS      = ["nvidia/z-ai/glm-5.1", ...JS_MODELS];
+// Edit Workflow: Route to stage registries first, with glm-5.1 as a last resort fallback
+const CONTENT_EDIT_MODELS = [...BLUEPRINT_MODELS, "nvidia/z-ai/glm-5.1"];
+const LAYOUT_EDIT_MODELS  = [...HTML_MODELS, "nvidia/z-ai/glm-5.1"];
+const DESIGN_EDIT_MODELS  = [...CSS_MODELS, "nvidia/z-ai/glm-5.1"];
+const JS_EDIT_MODELS      = [...JS_MODELS, "nvidia/z-ai/glm-5.1"];
 
 /**
  * Selects the appropriate model list for a portfolio modification request.
@@ -271,7 +275,7 @@ const callOpenRouter = async (messages, options = {}) => {
     let resolvedModel = model;
 
     try {
-      if (model.startsWith("nvidia/")) {
+      if (model.startsWith("nvidia/") && !model.endsWith(":free")) {
         provider = "NVIDIA";
         resolvedModel = model.replace("nvidia/", "");
         currentClient = getNvidiaClient();
@@ -293,12 +297,14 @@ const callOpenRouter = async (messages, options = {}) => {
       };
 
       // openrouter/auto and Claude models don't support response_format
-      const skipJsonMode = resolvedModel === "openrouter/auto" || resolvedModel.startsWith("anthropic/");
+      const skipJsonMode = resolvedModel === "auto" || resolvedModel === "openrouter/auto" || resolvedModel.startsWith("anthropic/");
       if (jsonMode && !skipJsonMode) {
         requestParams.response_format = { type: "json_object" };
       }
 
-      const completion = await currentClient.chat.completions.create(requestParams);
+      const completion = await currentClient.chat.completions.create(requestParams, {
+        timeout: 15000 // 15 seconds timeout
+      });
 
       const content = completion.choices?.[0]?.message?.content;
       if (!content) {
@@ -352,8 +358,10 @@ const callOpenRouter = async (messages, options = {}) => {
         continue;
       }
 
-      // Non-retryable errors (auth, bad request) — don't keep trying
-      throw err;
+      // Configuration, local auth, or other non-retryable model errors
+      // Register failure and immediately proceed to the next model in the fallback chain
+      registerModelFailure(model);
+      continue;
     }
   }
 

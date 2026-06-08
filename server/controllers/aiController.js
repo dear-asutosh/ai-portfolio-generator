@@ -3,6 +3,7 @@ const pdf = require("pdf-parse");
 const { runCodeGenPipeline } = require("./codeGenPipeline");
 const { assemblePortfolio, spliceSectionHtml } = require("./assemblePortfolio");
 const { callOpenRouter, selectModelsForEditType } = require("../config/openrouter");
+const { fetchGitHubData, fetchLeetCodeData } = require("../services/developerDataService");
 
 const mammoth = require("mammoth");
 
@@ -247,46 +248,19 @@ exports.parseResume = async (req, res) => {
     const systemPrompt = "You are an expert resume parser and portfolio architect. Extract structured information from the provided text and return it as a clean JSON object following this schema: { personalInfo: { name, email, phone, location, bio, socialLinks: [\"https://github.com/yourusername\", \"https://linkedin.com/in/yourusername\"] }, skills: [], experience: [{ title, company, location, duration, description }], education: [{ degree, school, year }], projects: [{ title, description, technologies: [] }] }. Make sure to extract the full URLs for social links (such as GitHub, LinkedIn, LeetCode) from the resume and put them in the socialLinks array. Do NOT just put platform names. The skills array MUST be a flat list of individual skill names (e.g. [\"React\", \"TypeScript\", \"Python\"]), NOT category-prefixed strings or grouped/comma-separated strings (like [\"Frontend: HTML, CSS\"]). ONLY return JSON, no extra text.";
     
     try {
-      const groq = getGroqClient();
-      let chatCompletion;
-      
-      try {
-        chatCompletion = await groq.chat.completions.create({
-          messages: [
-            { role: "system", content: systemPrompt },
-            { role: "user", content: extractedText },
-          ],
-          model: "llama-3.3-70b-versatile",
-          response_format: { type: "json_object" },
-        });
-      } catch (apiError) {
-        if (apiError.status === 429) {
-          console.warn("Groq 429 Rate Limit for 70B model during parsing. Fallback to mixtral-8x7b-32768...");
-          try {
-            chatCompletion = await groq.chat.completions.create({
-              messages: [
-                { role: "system", content: systemPrompt },
-                { role: "user", content: extractedText },
-              ],
-              model: "mixtral-8x7b-32768",
-            });
-          } catch (mixtralError) {
-            console.warn("Mixtral fallback failed or rate-limited. Fallback to llama-3.1-8b-instant...");
-            chatCompletion = await groq.chat.completions.create({
-              messages: [
-                { role: "system", content: systemPrompt },
-                { role: "user", content: extractedText },
-              ],
-              model: "llama-3.1-8b-instant",
-            });
-          }
-        } else {
-          throw apiError;
+      const { content: openRouterContent } = await callOpenRouter(
+        [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: extractedText },
+        ],
+        {
+          maxTokens: 4000,
+          temperature: 0.2,
+          jsonMode: true,
+          layer: "Blueprint"
         }
-      }
-
-      console.log("Groq response received.");
-      const content = chatCompletion.choices[0].message.content;
+      );
+      const content = openRouterContent;
       console.log("AI Content Length:", content.length);
 
       try {
@@ -444,45 +418,19 @@ exports.generatePortfolioData = async (req, res) => {
     const systemPrompt = "You are an expert resume parser and portfolio architect. Extract structured information from the provided text and return it as a clean JSON object following this schema: { personalInfo: { name, email, phone, location, bio, socialLinks: [\"https://github.com/yourusername\", \"https://linkedin.com/in/yourusername\"] }, skills: [], experience: [{ title, company, location, duration, description }], education: [{ degree, school, year }], projects: [{ title, description, technologies: [] }] }. Make sure to extract the full URLs for social links (such as GitHub, LinkedIn, LeetCode) from the resume and put them in the socialLinks array. Do NOT just put platform names. The skills array MUST be a flat list of individual skill names (e.g. [\"React\", \"TypeScript\", \"Python\"]), NOT category-prefixed strings or grouped/comma-separated strings (like [\"Frontend: HTML, CSS\"]). ONLY return JSON, no extra text.";
     
     try {
-      const groq = getGroqClient();
-      let chatCompletion;
-      
-      try {
-        chatCompletion = await groq.chat.completions.create({
-          messages: [
-            { role: "system", content: systemPrompt },
-            { role: "user", content: text },
-          ],
-          model: "llama-3.3-70b-versatile",
-          response_format: { type: "json_object" },
-        });
-      } catch (apiError) {
-        if (apiError.status === 429) {
-          console.warn("Groq 429 Rate Limit for 70B model during data generation. Fallback to mixtral-8x7b-32768...");
-          try {
-            chatCompletion = await groq.chat.completions.create({
-              messages: [
-                { role: "system", content: systemPrompt },
-                { role: "user", content: text },
-              ],
-              model: "mixtral-8x7b-32768",
-            });
-          } catch (mixtralError) {
-            console.warn("Mixtral fallback failed or rate-limited. Fallback to llama-3.1-8b-instant...");
-            chatCompletion = await groq.chat.completions.create({
-              messages: [
-                { role: "system", content: systemPrompt },
-                { role: "user", content: text },
-              ],
-              model: "llama-3.1-8b-instant",
-            });
-          }
-        } else {
-          throw apiError;
+      const { content: openRouterContent } = await callOpenRouter(
+        [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: text },
+        ],
+        {
+          maxTokens: 4000,
+          temperature: 0.2,
+          jsonMode: true,
+          layer: "Blueprint"
         }
-      }
-
-      const parsedData = cleanAndParseJSON(chatCompletion.choices[0].message.content);
+      );
+      const parsedData = cleanAndParseJSON(openRouterContent);
 
       // Sanitize and flatten skills list
       if (parsedData && parsedData.skills) {
@@ -520,9 +468,8 @@ exports.suggestImprovements = async (req, res) => {
   try {
     const { currentData, prompt } = req.body;
 
-    const groq = getGroqClient();
-    const chatCompletion = await groq.chat.completions.create({
-      messages: [
+    const { content } = await callOpenRouter(
+      [
         {
           role: "system",
           content: "You are a senior portfolio consultant. Based on the current user data, suggest improvements or new sections to make the portfolio stand out.",
@@ -532,12 +479,17 @@ exports.suggestImprovements = async (req, res) => {
           content: `Current Data: ${JSON.stringify(currentData)}\nUser Request: ${prompt}`,
         },
       ],
-      model: "llama-3.3-70b-versatile",
-    });
+      {
+        maxTokens: 1000,
+        temperature: 0.7,
+        jsonMode: false,
+        layer: "Blueprint"
+      }
+    );
 
     res.status(200).json({
       success: true,
-      suggestion: chatCompletion.choices[0].message.content,
+      suggestion: content,
     });
   } catch (error) {
     console.error("Groq AI Error:", error);
@@ -716,6 +668,56 @@ async function initializePortfolioBlueprintMode(req, res, { userData, targetRole
 }
 
 
+// Helpers to strip large base64 data-URIs out of AI prompts to avoid "request entity too large" payload limits,
+// and restore them safely back into the final response code.
+const extractAndReplaceBase64 = (codeObj) => {
+  const base64Map = {};
+  let placeholderCounter = 0;
+
+  // Regex to match data-URIs with base64
+  const base64Regex = /data:[^;]+;base64,[a-zA-Z0-9+/=]+/g;
+
+  const replaceInString = (str) => {
+    if (typeof str !== 'string') return str;
+    return str.replace(base64Regex, (match) => {
+      // Only extract if it's long enough to be an actual large image payload (e.g. > 128 characters)
+      if (match.length > 128) {
+        placeholderCounter++;
+        const placeholder = `__PROFILIO_BASE64_PLACEHOLDER_${placeholderCounter}__`;
+        base64Map[placeholder] = match;
+        return placeholder;
+      }
+      return match;
+    });
+  };
+
+  return {
+    cleanCode: {
+      html: replaceInString(codeObj.html || ''),
+      css: replaceInString(codeObj.css || ''),
+      js: replaceInString(codeObj.js || ''),
+    },
+    base64Map
+  };
+};
+
+const restoreBase64 = (codeObj, base64Map) => {
+  const restoreInString = (str) => {
+    if (typeof str !== 'string') return str;
+    let restored = str;
+    for (const [placeholder, original] of Object.entries(base64Map)) {
+      restored = restored.split(placeholder).join(original);
+    }
+    return restored;
+  };
+
+  return {
+    html: restoreInString(codeObj.html || ''),
+    css: restoreInString(codeObj.css || ''),
+    js: restoreInString(codeObj.js || ''),
+  };
+};
+
 /**
  * @desc    Modify portfolio code (HTML/CSS/JS) using AI based on user prompt
  * @route   POST /api/ai/modify-portfolio
@@ -742,8 +744,10 @@ exports.modifyPortfolioCode = async (req, res) => {
       });
     }
 
-    const groq = getGroqClient();
     console.log(`Modifying portfolio for project ${projectId} with prompt: ${prompt}`);
+
+    // Extract large base64 payloads to optimize token usage & prevent payload limits
+    const { cleanCode, base64Map } = extractAndReplaceBase64(currentCode);
     
     // High-fidelity modification prompt to guarantee all modifications are visually stunning and modern
     const systemPrompt = `You are a master UI/UX designer and elite frontend engineer who builds Awwwards-winning websites using Tailwind CSS. You edit existing portfolio code to reflect user requests while keeping the design stunning, ultra-modern, and premium. You always return a valid, parsable JSON object containing "explanation" and a "code" object with "html", "css", and "js" fields. No markdown, no backticks outside the JSON. Ensure the code is beautifully formatted with proper double-space indentation. DO NOT return minified code.`;
@@ -760,17 +764,17 @@ exports.modifyPortfolioCode = async (req, res) => {
 
       Current HTML (includes Tailwind CSS CDN script tag):
       \`\`\`html
-      ${currentCode.html}
+      ${cleanCode.html}
       \`\`\`
 
       Current CSS (contains custom keyframes, variables, and fonts):
       \`\`\`css
-      ${currentCode.css}
+      ${cleanCode.css}
       \`\`\`
 
       Current JS:
       \`\`\`javascript
-      ${currentCode.js}
+      ${cleanCode.js}
       \`\`\`
 
       User Requested Modification:
@@ -866,15 +870,18 @@ exports.modifyPortfolioCode = async (req, res) => {
       throw new Error("Could not extract HTML, CSS, or JS from the AI response.");
     }
 
+    // Restore the stripped base64 data-URIs safely back to the generated code
+    const restoredCode = restoreBase64(finalCode, base64Map);
+
     // Save the updated code to the project in the database
-    project.generatedCode = finalCode;
+    project.generatedCode = restoredCode;
     await project.save();
 
     res.status(200).json({
       success: true,
       data: {
         explanation,
-        code: finalCode
+        code: restoredCode
       }
     });
   } catch (error) {
@@ -935,7 +942,7 @@ exports.regenerateSection = async (req, res) => {
       });
     }
 
-    const SUPPORTED_SECTIONS = ['hero', 'skills', 'projects', 'experience', 'education', 'contact', 'nav'];
+    const SUPPORTED_SECTIONS = ['hero', 'about', 'skills', 'projects', 'experience', 'education', 'contact', 'nav'];
     if (!SUPPORTED_SECTIONS.includes(section)) {
       return res.status(400).json({
         success: false,
@@ -1055,6 +1062,7 @@ BLUEPRINT CONTEXT:
 USER DATA:
 - Name: ${userData.personalInfo?.name}
 - Role: ${userData.personalInfo?.targetRole || 'Professional'}
+- Bio: ${userData.personalInfo?.bio || ''}
 - Skills: ${JSON.stringify((userData.skills || []).slice(0, 12))}
 - Experience: ${JSON.stringify((userData.experience || []).slice(0, 3))}
 - Projects: ${JSON.stringify((userData.projects || []).slice(0, 4))}
@@ -1070,24 +1078,62 @@ Return ONLY: { "sectionHtml": "..." }`;
           { role: 'user', content: sectionUserPrompt },
         ],
         {
-          maxTokens: 3000,
+          maxTokens: 8000,
           temperature: 0.4,
           modelList: HTML_MODELS,
           jsonMode: true,
         }
       );
 
-      // Extract the section HTML from the JSON response
+      // Extract the section HTML from the JSON response using robust parsing and regex fallback recovery
       let newSectionHtml = '';
+      let parseSuccess = false;
+
       try {
-        let cleaned = sectionContent.trim();
-        if (cleaned.startsWith('```json')) cleaned = cleaned.slice(7);
-        else if (cleaned.startsWith('```')) cleaned = cleaned.slice(3);
-        if (cleaned.endsWith('```')) cleaned = cleaned.slice(0, -3);
-        const parsed = JSON.parse(cleaned.trim());
-        newSectionHtml = parsed.sectionHtml || parsed.html || '';
-      } catch {
-        // Fallback: try to extract raw HTML
+        const parsed = cleanAndParseJSON(sectionContent);
+        if (parsed && (parsed.sectionHtml || parsed.html)) {
+          newSectionHtml = parsed.sectionHtml || parsed.html;
+          parseSuccess = true;
+        }
+      } catch (err) {
+        console.warn("[SectionRegen] JSON parse failed, attempting regex recovery:", err.message);
+      }
+
+      if (!parseSuccess) {
+        // Try regex extraction for "sectionHtml": "..." or "html": "..."
+        // Handles escaped quotes and newlines even in a truncated JSON response
+        const htmlRegex = /"(?:sectionHtml|html)"\s*:\s*"([\s\S]*?)"\s*(?:,|\s*\})/i;
+        const match = htmlRegex.exec(sectionContent);
+        if (match) {
+          try {
+            // Unescape the JSON string safely
+            newSectionHtml = JSON.parse(`"${match[1]}"`);
+            parseSuccess = true;
+            console.log("[SectionRegen] Successfully recovered HTML via regex extraction!");
+          } catch (e) {
+            // Unescape manually as fallback
+            newSectionHtml = match[1]
+              .replace(/\\n/g, '\n')
+              .replace(/\\"/g, '"')
+              .replace(/\\t/g, '\t')
+              .replace(/\\\\/g, '\\');
+            parseSuccess = true;
+            console.log("[SectionRegen] Recovered HTML via regex + manual unescape!");
+          }
+        }
+      }
+
+      // If it still failed and the content looks like JSON, throw an error instead of corrupting the HTML
+      if (!parseSuccess && (sectionContent.trim().startsWith('{') || sectionContent.includes('"sectionHtml"'))) {
+        console.error("[SectionRegen] Failed to parse JSON or extract HTML from truncated response:", sectionContent);
+        return res.status(500).json({
+          success: false,
+          message: 'Section regeneration returned incomplete/corrupted content. Please try again.',
+        });
+      }
+
+      // If it's not JSON, use the raw fallback
+      if (!newSectionHtml) {
         newSectionHtml = sectionContent
           .replace(/^```html?\n?/i, '')
           .replace(/\n?```$/, '')
@@ -1144,6 +1190,136 @@ Return ONLY: { "sectionHtml": "..." }`;
     return res.status(500).json({
       success: false,
       message: 'Section regeneration failed.',
+      error: error.message,
+    });
+  }
+};
+
+
+/**
+ * @desc    Fetch GitHub profile + repos, fetch optional LeetCode stats, parse with AI, and return structured portfolio data
+ * @route   POST /api/ai/import-github
+ * @access  Private
+ */
+exports.importGitHubProfile = async (req, res) => {
+  try {
+    const { username } = req.body;
+
+    if (!username) {
+      return res.status(400).json({
+        success: false,
+        message: "GitHub username is required.",
+      });
+    }
+
+    console.log(`[GitHub Onboarding] Starting sync for GitHub: '${username}'`);
+
+    // 1. Fetch data from APIs
+    let githubData = { repos: [], profile: null };
+
+    try {
+      githubData = await fetchGitHubData(username);
+    } catch (apiErr) {
+      console.warn(`[GitHub Onboarding] Live fetch failed:`, apiErr.message);
+    }
+
+    if (!githubData.profile) {
+      return res.status(404).json({
+        success: false,
+        message: `Could not fetch GitHub profile for '${username}'. Please make sure the username is valid.`,
+      });
+    }
+
+    // 2. Feed it to OpenRouter / AI to build normalized portfolio data
+    const systemPrompt = "You are an expert resume parser and portfolio architect. Extract structured information from the provided GitHub profile and repositories and return it as a clean JSON object following this schema: { personalInfo: { name, email, phone, location, bio, socialLinks: [\"https://github.com/yourusername\", \"https://linkedin.com/in/yourusername\"] }, skills: [], experience: [{ title, company, location, duration, description }], education: [{ degree, school, year }], projects: [{ title, description, technologies: [] }] }. The skills array MUST be a flat list of individual skill names (e.g. [\"React\", \"TypeScript\", \"Python\"]), NOT category-prefixed strings. Choose up to 6 of the most significant public repositories and create a professional title, description, and list of technologies for each. Only return JSON, no extra text.";
+
+    const inputData = {
+      githubProfile: githubData.profile,
+      githubRepos: githubData.repos
+    };
+
+    console.log("Sending GitHub data to OpenRouter for parsing...");
+    const { content } = await callOpenRouter(
+      [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: `Here is the developer's raw data: ${JSON.stringify(inputData)}` },
+      ],
+      {
+        layer: "GitHub Import Parsing",
+        jsonMode: true,
+      }
+    );
+
+    const parsedData = cleanAndParseJSON(content);
+
+    // 3. Post-Process to ensure social links are fully populated with exact platform links
+    parsedData.personalInfo = parsedData.personalInfo || {};
+    let socialLinks = parsedData.personalInfo.socialLinks || [];
+    if (!Array.isArray(socialLinks)) {
+      socialLinks = [];
+    }
+
+    // Standardize structure of socialLinks (array of {platform, url})
+    socialLinks = socialLinks.map(link => {
+      if (typeof link === 'string') {
+        const urlLower = link.toLowerCase();
+        let platform = 'website';
+        if (urlLower.includes('github.com')) platform = 'GitHub';
+        else if (urlLower.includes('linkedin.com')) platform = 'LinkedIn';
+        else if (urlLower.includes('leetcode.com')) platform = 'LeetCode';
+        return { platform, url: link };
+      }
+      return link;
+    }).filter(Boolean);
+
+    // Ensure GitHub is present
+    const hasGitHub = socialLinks.some(l => l.platform.toLowerCase() === 'github');
+    if (!hasGitHub) {
+      socialLinks.push({ platform: 'GitHub', url: `https://github.com/${username.trim()}` });
+    }
+
+    // Recover other public properties (name, location, email, website) if AI failed to pick them up
+    if (!parsedData.personalInfo.name || parsedData.personalInfo.name === 'Creative Professional') {
+      parsedData.personalInfo.name = githubData.profile.name || username;
+    }
+    if (!parsedData.personalInfo.location) {
+      parsedData.personalInfo.location = githubData.profile.location || '';
+    }
+    if (!parsedData.personalInfo.email) {
+      parsedData.personalInfo.email = githubData.profile.email || '';
+    }
+    if (!parsedData.personalInfo.bio || parsedData.personalInfo.bio.length < 10) {
+      parsedData.personalInfo.bio = githubData.profile.bio || '';
+    }
+    
+    // Add blog/website if present on GitHub profile
+    if (githubData.profile.blog) {
+      const blogUrl = githubData.profile.blog.startsWith('http') ? githubData.profile.blog : `https://${githubData.profile.blog}`;
+      const hasWebsite = socialLinks.some(l => l.platform.toLowerCase() === 'website');
+      if (!hasWebsite) {
+        socialLinks.push({ platform: 'Website', url: blogUrl });
+      }
+    }
+
+    parsedData.personalInfo.socialLinks = socialLinks;
+
+    // Clean skills
+    if (parsedData.skills) {
+      parsedData.skills = cleanSkills(parsedData.skills);
+    }
+
+    console.log("🟢 FINALIZED SOCIAL MEDIA LINKS FROM GITHUB SYNC:");
+    console.log(JSON.stringify(socialLinks, null, 2));
+
+    res.status(200).json({
+      success: true,
+      data: parsedData,
+    });
+  } catch (error) {
+    console.error("Critical Error in importGitHubProfile:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal Server Error during GitHub data import.",
       error: error.message,
     });
   }
