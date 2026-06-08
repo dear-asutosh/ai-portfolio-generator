@@ -58,18 +58,19 @@ const getOpenRouterClient = () => {
 
 // ─── Stage 1: Content Planning — Blueprint Layer ───────────────────────────
 //
-// Primary: Kimi K2.6 — 1T-param MoE model, excels at structured reasoning,
-//          agentic tasks, and producing high-quality JSON blueprints.
-// Fallback 1: openrouter/auto — dynamic routing for content tasks (acceptable here).
-// Fallback 2: GLM-4.5 Air — fast, instruction-following, good at structured output.
-// Fallback 3: Gemma 4 31B — reliable free-tier safety net.
+// Primary: openrouter/free — dynamic routing picks whichever free model is
+//          currently healthy, avoiding individual model 429 delays entirely.
+// Fallback 1: GLM-4.5 Air — most reliable specific free-tier model.
+// Fallback 2: Gemma 4 31B — good safety net (but frequently rate-limited).
+// Fallback 3: Kimi K2.6 — strong reasoning, slower.
+// Fallback 4: openrouter/auto — last resort dynamic routing (may incur cost).
 
 const BLUEPRINT_MODELS = [
-  "google/gemma-4-31b-it:free",
-  "z-ai/glm-4.5-air:free",
-  "moonshotai/kimi-k2.6:free",
-  "openrouter/free",
   "openrouter/auto",
+  "openrouter/free",
+  "z-ai/glm-4.5-air:free",
+  "google/gemma-4-31b-it:free",
+  "moonshotai/kimi-k2.6:free",
 ];
 
 // ─── Stage 2: HTML Architecture Layer ─────────────────────────────────────
@@ -87,8 +88,8 @@ const HTML_MODELS = [
   "qwen/qwen3-coder:free",
   "openrouter/free",
   "meta-llama/llama-3.3-70b-instruct:free",
-  "google/gemma-4-31b-it:free",
   "z-ai/glm-4.5-air:free",
+  "google/gemma-4-31b-it:free",
   "openrouter/auto",
 ];
 
@@ -105,8 +106,8 @@ const HTML_MODELS = [
 const CSS_MODELS = [
   "nvidia/nemotron-3-super-120b-a12b:free",
   "openrouter/free",
-  "google/gemma-4-31b-it:free",
   "z-ai/glm-4.5-air:free",
+  "google/gemma-4-31b-it:free",
   "openrouter/auto",
 ];
 

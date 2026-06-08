@@ -205,7 +205,8 @@ const Dashboard = () => {
   };
 
   // Compute total/max for progress bar
-  const totalCount = usage?.totalPortfolios || 0;
+  // Use Math.max to prevent desync if subscription endpoint fails while projects endpoint succeeds
+  const totalCount = Math.max(usage?.totalPortfolios || 0, projects.length);
   const maxAllowed = limits?.maxPortfolios || 1;
   const percentage = maxAllowed === Infinity ? 0 : Math.min(100, (totalCount / maxAllowed) * 100);
 

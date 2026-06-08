@@ -29,6 +29,9 @@ exports.getSubscriptionStatus = async (req, res) => {
             user: user._id
         });
 
+        console.log(`[Subscription Debug] req.user.id: ${req.user.id}, user._id: ${user._id}`);
+        console.log(`[Subscription Debug] Active: ${activePortfolios}, Total: ${totalPortfolios}`);
+
         const limits = {
             free: { maxPortfolios: 1, hostingDuration: '7 days', canExportCode: false },
             pro: { maxPortfolios: 5, hostingDuration: 'active subscription', canExportCode: true },
