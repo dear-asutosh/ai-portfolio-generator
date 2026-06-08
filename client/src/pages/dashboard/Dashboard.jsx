@@ -213,12 +213,13 @@ const Dashboard = () => {
   return (
     <div className="pt-24 pb-12 px-6 max-w-7xl mx-auto min-h-screen bg-[#0a0a0a] text-white">
       {notification && (
-        <Notification 
-          type={notification.type} 
-          message={notification.message} 
-          onClose={() => setNotification(null)} 
-          className="mb-8"
-        />
+        <div className="fixed top-6 right-6 z-[9999]">
+          <Notification 
+            type={notification.type} 
+            message={notification.message} 
+            onClose={() => setNotification(null)} 
+          />
+        </div>
       )}
 
       {/* Subscription / Plan Banner */}

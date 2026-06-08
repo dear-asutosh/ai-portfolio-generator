@@ -92,8 +92,8 @@ const Notification = ({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: -20, scale: 0.95 }}
-      animate={isExiting ? { opacity: 0, y: -15, scale: 0.95 } : { opacity: 1, y: 0, scale: 1 }}
+      initial={{ opacity: 0, x: 60, scale: 0.95 }}
+      animate={isExiting ? { opacity: 0, x: 60, scale: 0.95 } : { opacity: 1, x: 0, scale: 1 }}
       transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
       className={`relative overflow-hidden w-full md:w-[440px] rounded-2xl border backdrop-blur-xl ${current.bg} ${current.border} ${current.shadow} p-4 flex gap-4 ${className} select-none`}
       style={{
@@ -141,7 +141,7 @@ const Notification = ({
         <motion.div 
           initial={{ width: '100%' }}
           animate={{ width: 0 }}
-          transition={{ duration: duration / 1000, ease: 'linear' }}
+          transition={{ duration: (duration - 300) / 1000, ease: 'linear' }}
           className={`absolute bottom-0 left-0 h-[3px] ${current.progressBar}`}
         />
       )}
